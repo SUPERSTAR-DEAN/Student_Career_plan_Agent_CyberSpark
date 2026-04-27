@@ -1,0 +1,165 @@
+================================================================================
+  基于 AI 的大学生职业规划智能体 — 项目代码说明
+================================================================================
+
+z一、项目概述
+--------------------------------------------------------------------------------
+本系统面向高校学生，提供岗位画像构建、学生能力画像、人岗匹配与职业生涯发展
+报告生成。大模型默认使用阿里云千问（DashScope），支持简历上传或表单录入。
+
+二、入口与运行方式
+--------------------------------------------------------------------------------
+• 命令行演示入口：  main.py
+  - initialize_system()：加载 .env、初始化 LLM、加载岗位 CSV、构建岗位画像与
+    职业图谱、创建匹配引擎；返回 (llm, job_profiles, career_graph, matching_engine)。
+  - process_student_career_planning(student_input, system_components)：根据简历或
+    表单构建学生画像、人岗匹配、职业路径、行动计划与完整报告；返回结构化结果。
+  - main()：执行一次演示（表单示例），并在终端打印报告摘要。
+  - 位置：项目根目录 main.py，约第 17～110 行。
+
+• Web 界面入口：  app.py
+  - 文件开头（约第 4～10 行）：当直接运行 python app.py 时，通过子进程启动
+    Streamlit，避免 “Runtime instance already exists” 报错；通过环境变量
+    STREAMLIT_LAUNCHED_BY_APP=1 区分“直接运行”与“被 Streamlit 加载”。
+  - load_dotenv()：约第 16～20 行，优先加载 .env（千问 API Key 等）。
+  - get_system()：约第 29～32 行，@st.cache_resource 缓存的系统初始化，内部
+    调用 main.initialize_system()。
+  - main_ui()：约第 36 行起，包含表单录入/简历上传、推荐岗位数量与目标岗位
+    设置、生成报告按钮、结果展示（学生画像、人岗匹配、职业路径、行动计划、
+    报告摘要）以及导出 Word/PDF 按钮。
+  - 位置：项目根目录 app.py。
+
+三、全局配置
+--------------------------------------------------------------------------------
+• 配置文件：  config.py
+  - AppConfig 类：大模型配置（LLM_PROVIDER、LLM_API_KEY、LLM_BASE_URL、
+    LLM_MODEL_NAME，默认千问）、数据路径（JOB_DATA_PATH、GRAPH_OUTPUT_PATH 等）、
+    人岗匹配四大维度权重 MATCH_WEIGHTS、岗位/学生画像维度列表、ensure_dirs()。
+  - 位置：项目根目录 config.py，约第 10～68 行。
+
+• 环境变量示例：  .env.example 与 .env
+  - 复制 .env.example 为 .env 后填写 LLM_API_KEY 等；app.py 与 main.py 通过
+    load_dotenv() 或 config 中的 os.getenv 读取。
+  - 位置：项目根目录 .env.example、.env（.env 勿提交版本控制）。
+
+四、核心模块（models/）
+--------------------------------------------------------------------------------
+• 大模型封装：  models/llm_wrapper.py
+  - LLMWrapper：OpenAI 兼容接口，支持千问等通过 base_url 接入。
+  - __init__：api_key、base_url、model_name，无 key 时使用 _mock_response。
+  - _call()：统一调用 chat.completions.create，返回助手回复文本。
+  - _parse_json_block()：从回复中解析 JSON（支持被 markdown 代码块包裹）。
+  - extract_job_requirements(job_description)：从职位描述提取岗位画像（专业
+    技能、证书、创新能力、学习能力、抗压、沟通、实习经验、团队协作、问题解决、
+    技术深度等），约第 82～100 行。
+  - analyze_student_profile(resume_text)：从简历/自述提取学生能力画像（技能
+    等级、证书、各维度 1～5 等），约第 122～145 行。
+  - generate_career_advice(context)：生成个性化职业建议（纯中文，非 JSON），
+    约第 147～155 行。
+  - optimize_report_content(report_text)：报告智能润色，约第 156～165 行。
+  - 位置：models/llm_wrapper.py。
+
+• 岗位画像：  models/job_profile.py
+  - JobProfile：单岗位数据结构。含 job_id、job_name、required_skills、
+    certificates、soft_skills、career_path、related_jobs，以及与配置对齐的
+    多维度字段（innovation_ability、learning_ability、stress_resistance、
+    communication、internship_experience、teamwork、problem_solving、
+    technical_depth）、description、industry、salary_range、location、
+    company_name。to_dimension_dict() 转为四大维度结构供匹配使用。
+  - JobProfileBuilder：build_from_raw_data(raw_job_data) 从单条原始数据构建
+    画像，若有 LLM 则调用 llm.extract_job_requirements(description)；否则
+    _fill_profile_from_description 做简单关键词填充。batch_build_profiles(
+    job_data_list) 批量构建并返回 {job_id: JobProfile}。
+  - 位置：models/job_profile.py，约第 10～168 行。
+
+• 职业图谱：  models/graph_builder.py
+  - LEVEL_KEYWORDS：岗位名称层级关键词（实习/初级/中级/高级/专家/总监等）
+    与层级 0～5 的对应关系；_infer_level(job_name)、_skill_overlap(a, b)。
+  - CareerGraphBuilder：使用 networkx 有向图。
+  - build_vertical_path(job_profiles)：按层级构建垂直晋升边。
+  - build_lateral_path()：按技能相似度构建横向换岗边，保证每岗位至少 2 条
+    换岗路径。
+  - get_career_path(start_job, target_job)、get_vertical_paths(job_id)、
+    get_lateral_paths(job_id)、_resolve_job_id()、export_graph()、
+    visualize_graph()。
+  - 位置：models/graph_builder.py，约第 17～210 行。
+
+• 学生画像：  models/student_profile.py
+  - StudentProfile：与岗位画像维度对齐。含 skills（技能名→1～5）、certificates、
+    experience、career_preferences、competitiveness_score、completeness_score
+    及各素养维度。calculate_scores() 计算完整度与竞争力；to_dimension_dict()
+    转为四大维度结构。
+  - StudentProfileAnalyzer(llm)：analyze_from_resume(resume_file_path) 调用
+    services.resume_parser.parse_resume 取文本后经 LLM 解析为画像；
+    analyze_from_form(form_data) 从表单字典构建画像；gap_analysis(
+    student_profile, job_profile) 返回缺失技能、待提升技能、优势技能等。
+  - 位置：models/student_profile.py，约第 33～203 行。
+
+• 人岗匹配：  models/matching_engine.py
+  - MatchingEngine(weights)：四大维度权重默认来自 AppConfig.MATCH_WEIGHTS。
+  - calculate_dimension_score(student_dim, job_dim, dimension)：单维度得分
+    （basic_requirements、professional_skills、professional_quality、
+    development_potential），内部由 _score_basic、_score_professional_skills、
+    _score_quality、_score_potential 实现。
+  - calculate_overall_match(student_profile, job_profile, gap_analysis)：
+    汇总各维度得分与权重得综合分，并附带 gap_analysis。
+  - recommend_top_jobs(student_profile, job_profiles, top_k)：按综合分排序
+    返回前 top_k 个岗位的匹配结果。
+  - 位置：models/matching_engine.py，约第 10～212 行。
+
+• 报告生成：  models/report_generator.py
+  - CareerReportGenerator(llm_wrapper)：generate_executive_summary(match_result)
+    生成可读摘要，若 LLM 返回 JSON 则回退到程序拼接的摘要。
+  - generate_career_path_section(target_job, graph_builder)：短期目标、中期路径、
+    长期愿景及路径图数据。
+  - generate_action_plan(gap_analysis, timeline)：短期/中期任务列表、截止时间、
+    资源、评估周期与指标。
+  - compile_full_report(...)：整合为结构化 report_data（含 full_text）。
+  - export_to_pdf(report_data, output_path)、export_to_word(report_data,
+    output_path)：使用 reportlab、python-docx 导出。
+  - 位置：models/report_generator.py，约第 12～225 行。
+
+五、服务层（services/）
+--------------------------------------------------------------------------------
+• 岗位数据加载：  services/data_processor.py
+  - COLUMNS_MAP：中文列名与英文字段名映射（职位名称、工作地址、薪资范围、
+    公司全称、所属行业、人员规模、企业性质、职位编码、职位描述、公司简介）。
+  - load_job_data(csv_path)：从 CSV 读取岗位列表，支持 utf-8/gbk；若无
+    job_data.csv 则尝试 job_data_sample.csv。返回 list[dict]，键为中文列名。
+  - ensure_job_data_path()：确保数据目录存在。
+  - 位置：services/data_processor.py，约第 11～66 行。
+
+• 简历解析：  services/resume_parser.py
+  - parse_resume(resume_file_path)：根据后缀调用 _extract_pdf、_extract_docx
+    或直接读取 .txt，返回纯文本供 LLM 解析。
+  - _extract_pdf(path)：使用 pdfplumber 逐页提取文本。
+  - _extract_docx(path)：使用 python-docx 提取段落文本。
+  - 位置：services/resume_parser.py，约第 7～46 行。
+
+六、数据与资源
+--------------------------------------------------------------------------------
+• 岗位数据：  data/raw/job_data.csv（正式）、data/raw/job_data_sample.csv（演示）
+  - CSV 需包含职位编码、职位名称、工作地址、薪资范围、公司全称、所属行业、
+    人员规模、企业性质、职位描述、公司简介等列（见 data_processor.COLUMNS_MAP）。
+
+• 图谱导出：  data/graphs/career_graph.gml、data/graphs/career_graph.json
+  - 由 CareerGraphBuilder.export_graph() 在 initialize_system() 中写入。
+
+• 报告导出：  data/reports/（Word/PDF 由 app.py 中导出按钮写入）
+
+七、测试
+--------------------------------------------------------------------------------
+• 匹配引擎测试：  tests/test_matching_engine.py
+• 测试依赖：  tests/requirements.txt（如 pytest）
+
+八、依赖与运行
+--------------------------------------------------------------------------------
+• 依赖列表：  根目录 requirements.txt
+  - openai、pandas、networkx、python-docx、reportlab、pdfplumber、python-dotenv、
+    streamlit、requests 等。
+
+• 推荐运行方式：
+  - 完整 Web 操作：  python app.py  或  streamlit run app.py
+  - 命令行演示：     python main.py
+
+

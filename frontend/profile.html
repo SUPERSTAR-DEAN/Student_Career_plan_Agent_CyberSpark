@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>个人信息填写 - CyberSpark</title>
+  <link rel="stylesheet" href="/frontend/styles.css" />
+</head>
+
+<body class="profile-page">
+  <div class="header-area" id="sticky-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3">
+          <div class="header-logo">
+            <a href="/new-home" title="大学生职业规划网"><span class="header-logo-text">CyberSpark大学生职业生涯规划</span></a>
+          </div>
+        </div>
+        <div class="col-lg-9">
+          <button type="button" class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>
+          <div class="header-menu-wrap" id="headerMenuWrap">
+            <div class="header-menu">
+              <ul>
+                <li><a href="/new-home">网站首页</a></li>
+                <li class="menu-item-has-children">
+                  <a href="#">认识自我<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="https://www.arealme.com/holland-code-career-test/cn/" rel="noopener noreferrer"
+                        target="_blank">霍兰德职业倾向测试</a></li>
+                    <li><a href="https://www.16personalities.com/ch" rel="noopener noreferrer" target="_blank">MBTI
+                        参考（16Personalities）</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#">生涯规划<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/frontend/profile.html" data-transition="true">个人信息填写</a></li>
+                    <li><a href="/frontend/resume.html" data-transition="true">个人简历上传</a></li>
+                    <li><a href="/frontend/report.html" data-transition="true">生涯报告生成</a></li>
+                    <li><a href="/profile-detail" data-transition="true">画像分析</a></li>
+                    <li><a href="/vertical-job-graph" data-transition="true">垂直岗位图谱</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#">资讯中心<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/frontend/info-recruit.html" data-transition="true">校招与实习日历</a></li>
+                    <li><a href="/frontend/info-industry.html" data-transition="true">行业与岗位瞭望</a></li>
+                    <li><a href="/frontend/info-resources.html" data-transition="true">规划工具与资源</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#">成长赋能<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/frontend/growth-communication.html" data-transition="true">沟通与面试表达</a></li>
+                    <li><a href="/frontend/growth-resume-tips.html" data-transition="true">简历与作品集</a></li>
+                    <li><a href="/frontend/growth-wellbeing.html" data-transition="true">压力与情绪调节</a></li>
+                    <li><a href="/frontend/growth-study.html" data-transition="true">学业与时间管理</a></li>
+                    <li><a href="/frontend/growth-family.html" data-transition="true">家庭沟通小贴士</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            <a class="login-btn" href="#">会员登陆</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero-area style-one d-flex align-items-center page-hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="section-title left style-one">
+          <p class="section-subtitle">生涯规划流程 / 第一步</p>
+          <h1>个人信息填写</h1>
+          <p class="hero-desc">多维度信息采集：基础信息、技能证书、经历、MBTI 与能力自评（六项软实力会与 MBTI 融合，冲突时以 MBTI 为优先），用于人岗六维匹配与生涯报告。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="inner-page" style="padding-top: 0;">
+    <div class="container">
+      <div class="status-strip">
+        <div class="progress-line"><span id="profileProgressBar"></span></div>
+        <div class="progress-text" id="profileProgressText">分析进度 0%</div>
+      </div>
+      <section class="panel">
+        <h2>基本信息与能力自评</h2>
+
+        <div class="form-section-title">基础信息</div>
+        <div class="form-grid">
+          <div class="field"><label>学号 / 昵称</label><input id="studentId" value="anonymous" /></div>
+          <div class="field">
+            <label>当前年级</label>
+            <select id="grade">
+              <option>大一</option>
+              <option selected>大二</option>
+              <option>大三</option>
+              <option>大四</option>
+              <option>研究生</option>
+              <option>其他</option>
+            </select>
+          </div>
+          <div class="field full"><label>专业方向</label><input id="major" placeholder="如：计算机科学、软件工程、物联网工程" /></div>
+          <div class="field">
+            <label>院校层次（用于竞争力评分）</label>
+            <select id="schoolTier">
+              <option value="未填写" selected>未填写</option>
+              <option value="985/双一流">985/双一流</option>
+              <option value="211/双一流">211/双一流</option>
+              <option value="普通一本/二本">普通一本/二本</option>
+              <option value="高职/专科">高职/专科</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section-title">职业意向</div>
+        <div class="field full">
+          <label>感兴趣的行业（可多选）</label>
+          <div class="checkbox-grid" id="industryGrid">
+            <label><input type="checkbox" name="industry" value="互联网" /> 互联网</label>
+            <label><input type="checkbox" name="industry" value="软件开发" /> 软件开发</label>
+            <label><input type="checkbox" name="industry" value="大数据/AI" /> 大数据/AI</label>
+            <label><input type="checkbox" name="industry" value="金融科技" /> 金融科技</label>
+            <label><input type="checkbox" name="industry" value="制造业数字化" /> 制造业数字化</label>
+            <label><input type="checkbox" name="industry" value="其他" /> 其他</label>
+          </div>
+        </div>
+        <div class="field full"><label>优先就业城市</label><input id="targetCity" placeholder="如：北京 / 上海 / 深圳" /></div>
+
+        <div class="form-section-title">技能与证书</div>
+        <div class="field full">
+          <label>专业技能（每行一项，如 Python、SQL、Java）</label>
+          <textarea id="skillsLines" rows="4" placeholder="Python&#10;SQL&#10;机器学习"></textarea>
+        </div>
+        <div class="field full"><label>已获证书（逗号分隔）</label><input id="certs" placeholder="英语六级, 软考中级" /></div>
+
+        <div class="form-section-title">经历（多行）</div>
+        <div class="field full">
+          <label>项目 / 实习经历（每段一行）</label>
+          <textarea id="experienceLines" rows="3" placeholder="例如：2024.07-2024.09 XX公司 · 后端实习生"></textarea>
+        </div>
+        <div class="field full">
+          <label>竞赛 / 奖项经历（每段一行）</label>
+          <textarea id="awardsLines" rows="2" placeholder="例如：省级一等奖（计算机设计大赛）"></textarea>
+        </div>
+        <div class="field full">
+          <label>科研 / 论文 / 专利（每段一行）</label>
+          <textarea id="researchLines" rows="2" placeholder="例如：SCI 一作论文 1 篇"></textarea>
+        </div>
+
+        <div class="form-section-title">MBTI（可选，用于校正软实力自评）</div>
+        <div class="form-grid">
+          <div class="field full">
+            <label>MBTI 四字母类型</label>
+            <select id="mbtiType">
+              <option value="" selected>未填写 / 暂不清楚</option>
+              <option value="INTJ">INTJ</option>
+              <option value="INTP">INTP</option>
+              <option value="ENTJ">ENTJ</option>
+              <option value="ENTP">ENTP</option>
+              <option value="INFJ">INFJ</option>
+              <option value="INFP">INFP</option>
+              <option value="ENFJ">ENFJ</option>
+              <option value="ENFP">ENFP</option>
+              <option value="ISTJ">ISTJ</option>
+              <option value="ISFJ">ISFJ</option>
+              <option value="ESTJ">ESTJ</option>
+              <option value="ESFJ">ESFJ</option>
+              <option value="ISTP">ISTP</option>
+              <option value="ISFP">ISFP</option>
+              <option value="ESTP">ESTP</option>
+              <option value="ESFP">ESFP</option>
+            </select>
+            <p class="field-hint" style="margin:6px 0 0;font-size:13px;color:#64748b;">填写后，系统会将「沟通、协作、抗压、问题解决、创新、学习」六项与类型典型倾向融合；若与滑块自评冲突较大，以 MBTI 侧为准。可参考导航中 16Personalities 自测。技术深度不参与 MBTI 校正。</p>
+          </div>
+        </div>
+
+        <div class="form-section-title">能力自评（1–5）</div>
+        <div class="range-grid">
+          <div class="range-row"><label>学习能力</label><input type="range" id="learning_ability" min="1" max="5"
+              value="3" /><span id="v_learning_ability">3</span></div>
+          <div class="range-row"><label>沟通能力</label><input type="range" id="communication" min="1" max="5"
+              value="3" /><span id="v_communication">3</span></div>
+          <div class="range-row"><label>抗压能力</label><input type="range" id="stress_resistance" min="1" max="5"
+              value="3" /><span id="v_stress_resistance">3</span></div>
+          <div class="range-row"><label>创新能力</label><input type="range" id="innovation_ability" min="1" max="5"
+              value="3" /><span id="v_innovation_ability">3</span></div>
+          <div class="range-row"><label>团队协作</label><input type="range" id="teamwork" min="1" max="5" value="3" /><span
+              id="v_teamwork">3</span></div>
+          <div class="range-row"><label>问题解决</label><input type="range" id="problem_solving" min="1" max="5"
+              value="3" /><span id="v_problem_solving">3</span></div>
+          <div class="range-row"><label>技术深度</label><input type="range" id="technical_depth" min="1" max="5"
+              value="3" /><span id="v_technical_depth">3</span></div>
+        </div>
+
+        <div class="form-section-title">推荐与目标（可选）</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>推荐岗位数量</label>
+            <select id="topK">
+              <option>5</option>
+              <option selected>10</option>
+              <option>15</option>
+              <option>20</option>
+            </select>
+          </div>
+          <div class="field full"><label>目标岗位（逗号分隔，可选）</label><input id="targetJobs" placeholder="如：后端开发, 数据开发" /></div>
+          <div class="field full">
+            <label class="field-checkbox-inline" for="useAiMatch">
+              <input type="checkbox" id="useAiMatch" />
+              <span>增强大模型匹配（深度匹配更精准）</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="submitProfileBtn">生成职业规划分析</button>
+          <a class="btn btn-outline-report" href="/frontend/report.html" data-transition="true">进入生涯报告</a>
+        </div>
+        <div id="profileResult" class="result-box">请至少填写「专业技能」或「项目/实习经历」中一项，再点击生成。</div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/frontend/main.js"></script>
+  <script>
+    const submitProfileBtn = document.getElementById("submitProfileBtn");
+    const profileResult = document.getElementById("profileResult");
+
+    ["learning_ability", "communication", "stress_resistance", "innovation_ability", "teamwork", "problem_solving", "technical_depth"].forEach((id) => {
+      const el = document.getElementById(id);
+      const out = document.getElementById("v_" + id);
+      el?.addEventListener("input", () => { if (out) out.textContent = el.value; });
+    });
+
+    function linesToList(ta) {
+      return (ta.value || "").split("\n").map((s) => s.trim()).filter(Boolean);
+    }
+
+    function certsToList(s) {
+      return (s || "").replace(/，/g, ",").split(",").map((x) => x.trim()).filter(Boolean);
+    }
+
+    function selectedIndustries() {
+      return Array.from(document.querySelectorAll('input[name="industry"]:checked')).map((el) => el.value);
+    }
+
+    async function parseError(resp) {
+      const raw = await resp.text();
+      if (!raw) return `HTTP ${resp.status}（空响应）`;
+      try {
+        const data = JSON.parse(raw);
+        return data?.detail || data?.message || `HTTP ${resp.status}`;
+      } catch {
+        return `HTTP ${resp.status}（${raw.slice(0, 120)}）`;
+      }
+    }
+
+    async function parseJsonSafe(resp) {
+      const raw = await resp.text();
+      if (!raw) throw new Error("服务端返回空响应，请重试一次");
+      try {
+        return JSON.parse(raw);
+      } catch {
+        throw new Error(`返回格式异常：${raw.slice(0, 120)}`);
+      }
+    }
+
+    submitProfileBtn?.addEventListener("click", async () => {
+      const skills = linesToList(document.getElementById("skillsLines"));
+      const experience = linesToList(document.getElementById("experienceLines"));
+      if (!skills.length && !experience.length) {
+        window.showErrorModal("请至少填写专业技能（每行一项）或项目/实习经历（每行一段），再生成分析。");
+        return;
+      }
+
+      const grade = document.getElementById("grade").value;
+      const major = document.getElementById("major").value.trim();
+      const schoolTier = document.getElementById("schoolTier").value;
+      const targetIndustry = selectedIndustries();
+      const targetCity = document.getElementById("targetCity").value.trim();
+
+      const mbtiVal = (document.getElementById("mbtiType")?.value || "").trim();
+      const form_data = {
+        student_id: document.getElementById("studentId").value.trim() || "anonymous",
+        grade,
+        major_direction: major,
+        school_tier: schoolTier,
+        mbti_type: mbtiVal,
+        professional_skills: skills,
+        certificates: certsToList(document.getElementById("certs").value),
+        target_industry: targetIndustry,
+        target_city: targetCity,
+        learning_ability: Number(document.getElementById("learning_ability").value),
+        communication: Number(document.getElementById("communication").value),
+        stress_resistance: Number(document.getElementById("stress_resistance").value),
+        innovation_ability: Number(document.getElementById("innovation_ability").value),
+        teamwork: Number(document.getElementById("teamwork").value),
+        problem_solving: Number(document.getElementById("problem_solving").value),
+        technical_depth: Number(document.getElementById("technical_depth").value),
+        experience,
+        awards_experience: linesToList(document.getElementById("awardsLines")),
+        research_experience: linesToList(document.getElementById("researchLines")),
+        career_preferences: {
+          grade,
+          major_direction: major,
+          target_industry: targetIndustry,
+          target_city: targetCity,
+          school_tier: schoolTier,
+          mbti_type: mbtiVal,
+        },
+      };
+
+      const target_jobs = certsToList(document.getElementById("targetJobs").value);
+      const top_k = Number(document.getElementById("topK").value) || 10;
+
+      submitProfileBtn.disabled = true;
+      const progress = window.createProgressController("#profileProgressBar", "#profileProgressText");
+      progress.start();
+      profileResult.textContent = "正在调用后端生成匹配与报告数据...";
+
+      try {
+        const use_ai = document.getElementById("useAiMatch")?.checked === true;
+        const resp = await fetch("/api/plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ form_data, target_jobs, top_k, use_ai, mbti_type: mbtiVal }),
+        });
+        if (!resp.ok) throw new Error(await parseError(resp));
+        const data = await parseJsonSafe(resp);
+        localStorage.setItem("careerPlanLastResult", JSON.stringify(data));
+        progress.finish();
+        const top = data?.match_results?.[0];
+        const score = top
+          ? Number(top.overall_score ?? top.total_score ?? 0).toFixed(3)
+          : "0.000";
+        profileResult.textContent = top
+          ? `已生成：Top1 岗位「${top.job_name}」，综合匹配度 ${score} 分。点击上方「进入生涯报告」查看雷达图、路径与导出。`
+          : "已生成，但暂无匹配岗位。可点击上方「进入生涯报告」查看摘要与导出。";
+      } catch (e) {
+        progress.fail();
+        profileResult.textContent = `请求失败：${e.message || e}`;
+        window.showErrorModal(`个人信息分析失败：${e.message || e}`);
+      } finally {
+        submitProfileBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>基于AI的大学生职业规划智能体</title>
+    <!-- External Libraries -->
+    <script src="https://image.uc.cn/s/uae/g/3n/mos-production/0915/3.4.17.js"></script>
+    <script src="https://image.uc.cn/s/uae/g/3n/mos-production/fontawesome-free-7.1.0-web/js/all.min.js"></script>
+    <link href="https://image.uc.cn/s/uae/g/3n/mos-production/fontawesome-free-7.1.0-web/css/fontawesome.min.css"
+        rel="stylesheet" />
+    <script
+        src="https://image.uc.cn/s/uae/g/3n/mos-production/cdn-staticfile-net/echarts/5.4.3/echarts.min.js"></script>
+    <!-- Custom Styles -->
+    <style>
+        .site-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .site-logo--sm {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Smooth transitions */
+        .transition-all-300 {
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c7c7c7;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+
+        /* Toast Notification */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: white;
+            border-left: 4px solid;
+            padding: 16px 24px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-color: #10b981;
+        }
+
+        .toast.info {
+            border-color: #3b82f6;
+        }
+
+        .toast.warning {
+            border-color: #f59e0b;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Content Editable Placeholder */
+        [contenteditable]:empty:before {
+            content: attr(placeholder);
+            color: #9ca3af;
+            display: block;
+            /* For Firefox */
+        }
+    </style>
+</head>
+
+<body class="h-screen flex overflow-hidden text-gray-800">
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-xl z-20 hidden md:flex">
+        <div class="p-6 border-b border-slate-700 flex items-center gap-3">
+            <img alt="CyberSpark Logo" class="site-logo" src="/assets/logo.png" />
+            <div>
+                <h1 class="font-bold text-lg leading-tight">AI Career Agent</h1>
+                <p class="text-xs text-slate-400">大学生职业规划助手</p>
+            </div>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <button
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-3 bg-slate-800 text-blue-400"
+                id="nav-home" onclick="router('home')">
+                <i class="fa-solid fa-house w-5"></i> 首页概览
+            </button>
+            <button
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-3 text-slate-300"
+                id="nav-profile" onclick="router('profile')">
+                <i class="fa-solid fa-user-pen w-5"></i> 能力画像构建
+            </button>
+            <button
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-3 text-slate-300"
+                id="nav-matching" onclick="router('matching')">
+                <i class="fa-solid fa-magnifying-glass-chart w-5"></i> 人岗匹配分析
+            </button>
+            <button
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-3 text-slate-300"
+                id="nav-report" onclick="router('report')">
+                <i class="fa-solid fa-file-contract w-5"></i> 发展报告生成
+            </button>
+        </nav>
+        <div class="p-4 border-t border-slate-700 text-xs text-slate-500 text-center">
+            © 2026 Career AI Inc.
+        </div>
+    </aside>
+    <!-- Mobile Header -->
+    <div
+        class="md:hidden fixed top-0 w-full bg-slate-900 text-white z-30 p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-2">
+            <img alt="CyberSpark Logo" class="site-logo--sm" src="/assets/logo.png" />
+            <span class="font-bold">AI Career Agent</span>
+        </div>
+        <button class="text-xl" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+    </div>
+    <!-- Mobile Menu Overlay -->
+    <div class="fixed inset-0 bg-slate-900 z-20 transform translate-x-full transition-transform duration-300 md:hidden flex flex-col pt-20 px-6 space-y-4"
+        id="mobile-menu">
+        <button class="text-left text-xl text-white py-2 border-b border-slate-700"
+            onclick="router('home'); toggleMobileMenu()">首页概览</button>
+        <button class="text-left text-xl text-white py-2 border-b border-slate-700"
+            onclick="router('profile'); toggleMobileMenu()">能力画像构建</button>
+        <button class="text-left text-xl text-white py-2 border-b border-slate-700"
+            onclick="router('matching'); toggleMobileMenu()">人岗匹配分析</button>
+        <button class="text-left text-xl text-white py-2 border-b border-slate-700"
+            onclick="router('report'); toggleMobileMenu()">发展报告生成</button>
+    </div>
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 relative pt-16 md:pt-0">
+        <!-- SECTION: HOME -->
+        <section class="p-6 md:p-10 max-w-7xl mx-auto space-y-8 animate-fade-in" id="view-home">
+            <div class="text-center py-10">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">AI 驱动的大学生职业规划</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                    基于大模型技术，深度解析您的就业能力，精准匹配岗位画像，为您生成可落地的职业生涯发展报告。
+                </p>
+                <div class="mt-8 flex justify-center gap-4">
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold shadow-lg transition-transform hover:scale-105"
+                        onclick="router('profile')">
+                        开始构建画像
+                    </button>
+                    <button
+                        class="bg-white hover:bg-gray-100 text-slate-700 border border-gray-300 px-8 py-3 rounded-full font-semibold shadow-sm transition-transform hover:scale-105"
+                        onclick="router('matching')">
+                        浏览岗位库
+                    </button>
+                </div>
+            </div>
+            <!-- Feature Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div
+                        class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4 text-xl">
+                        <i class="fa-solid fa-fingerprint"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">能力画像构建</h3>
+                    <p class="text-gray-500 text-sm">支持简历解析与手动录入，从7大维度（技能、创新、抗压等）生成您的专属能力雷达图。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div
+                        class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4 text-xl">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">人岗精准匹配</h3>
+                    <p class="text-gray-500 text-sm">基于10+典型岗位画像，量化分析契合度与差距，提供基础、技能、素养、潜力四维评分。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div
+                        class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-4 text-xl">
+                        <i class="fa-solid fa-route"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">职业路径规划</h3>
+                    <p class="text-gray-500 text-sm">提供垂直晋升与横向换岗路径图谱，制定短期与中期成长计划，助您明确发展方向。</p>
+                </div>
+            </div>
+        </section>
+        <!-- SECTION: PROFILE -->
+        <section class="hidden p-6 md:p-10 max-w-7xl mx-auto" id="view-profile">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">学生就业能力画像构建</h2>
+                    <p class="text-slate-500">完善信息，AI将自动分析您的竞争力</p>
+                </div>
+                <div class="hidden md:block">
+                    <span class="text-sm text-gray-400">当前状态: <span class="text-orange-500 font-medium"
+                            id="profile-status">未分析</span></span>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Input Form -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Basic Info -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <i class="fa-regular fa-id-card text-blue-500"></i> 基本信息
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                                <input
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    id="student-name" placeholder="请输入姓名" type="text" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">专业</label>
+                                <input
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    id="student-major" placeholder="例如：计算机科学与技术" type="text" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">学历</label>
+                                <select
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    id="student-edu">
+                                    <option value="本科">本科</option>
+                                    <option value="硕士">硕士</option>
+                                    <option value="博士">博士</option>
+                                    <option value="专科">专科</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">毕业年份</label>
+                                <select
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                    id="student-year">
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Resume Upload Simulation -->
+                        <div
+                            class="mt-6 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
+                            <input accept=".pdf,.doc,.docx"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" id="resume-upload"
+                                type="file" />
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-sm text-gray-600 font-medium">点击上传简历 (PDF/Word)</p>
+                            <p class="text-xs text-gray-400 mt-1">AI将自动解析简历内容</p>
+                        </div>
+                        <p class="text-xs text-green-600 mt-2 hidden" id="upload-feedback"><i
+                                class="fa-solid fa-check"></i> 简历已上传，解析完成</p>
+                    </div>
+                    <!-- Capability Dimensions -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-purple-500"></i> 能力维度评估
+                        </h3>
+                        <p class="text-sm text-gray-500 mb-6">请根据自身情况调整各维度评分 (0-100)</p>
+                        <div class="space-y-5">
+                            <!-- Skill Slider -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm font-medium text-gray-700">专业技能</label>
+                                    <span class="text-sm font-bold text-blue-600" id="val-skill">70</span>
+                                </div>
+                                <input
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    max="100" min="0" oninput="updateRangeVal('skill', this.value)" type="range"
+                                    value="70" />
+                            </div>
+                            <!-- Cert Slider -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm font-medium text-gray-700">证书资质</label>
+                                    <span class="text-sm font-bold text-blue-600" id="val-cert">40</span>
+                                </div>
+                                <input
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    max="100" min="0" oninput="updateRangeVal('cert', this.value)" type="range"
+                                    value="40" />
+                            </div>
+                            <!-- Innovation Slider -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm font-medium text-gray-700">创新能力</label>
+                                    <span class="text-sm font-bold text-blue-600" id="val-innovation">60</span>
+                                </div>
+                                <input
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    max="100" min="0" oninput="updateRangeVal('innovation', this.value)" type="range"
+                                    value="60" />
+                            </div>
+                            <!-- Learning Slider -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm font-medium text-gray-700">学习能力</label>
+                                    <span class="text-sm font-bold text-blue-600" id="val-learning">75</span>
+                                </div>
+                                <input
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    max="100" min="0" oninput="updateRangeVal('learning', this.value)" type="range"
+                                    value="75" />
+                            </div>
+                            <!-- Resilience Slider -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm font-medium text-gray-700">抗压能力</label>
+                                    <span class="text-sm font-bold text-blue-600" id="val-resilience">65</span>
+                                </div>
+                                <input
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    max="100" min="0" oninput="updateRangeVal('resilience', this.value)" type="range"
+                                    value="65" />
+                            </div>
+                            <!-- Communication Slider -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm font-medium text-gray-700">沟通能力</label>
+                                    <span class="text-sm font-bold text-blue-600" id="val-communication">70</span>
+                                </div>
+                                <input
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    max="100" min="0" oninput="updateRangeVal('communication', this.value)" type="range"
+                                    value="70" />
+                            </div>
+                            <!-- Internship Slider -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <label class="text-sm font-medium text-gray-700">实习能力</label>
+                                    <span class="text-sm font-bold text-blue-600" id="val-internship">50</span>
+                                </div>
+                                <input
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                    max="100" min="0" oninput="updateRangeVal('internship', this.value)" type="range"
+                                    value="50" />
+                            </div>
+                        </div>
+                        <div class="mt-8">
+                            <button
+                                class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all flex justify-center items-center gap-2"
+                                id="btn-analyze" onclick="analyzeProfile()">
+                                <span>AI 智能分析画像</span>
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Visualization Result -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-6">
+                        <h3 class="text-lg font-bold mb-4 text-center">能力雷达图</h3>
+                        <div id="profile-chart" style="width: 100%; height: 350px;"></div>
+                        <div class="mt-6 space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm text-gray-600">完整度评分</span>
+                                <span class="font-bold text-slate-800" id="score-completeness">--</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                                <span class="text-sm text-blue-600">竞争力评分</span>
+                                <span class="font-bold text-blue-800" id="score-competitiveness">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- SECTION: MATCHING -->
+        <section class="hidden p-6 md:p-10 max-w-7xl mx-auto h-full flex flex-col" id="view-matching">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">人岗匹配分析</h2>
+                <p class="text-slate-500">选择目标岗位，查看您的契合度与差距分析</p>
+            </div>
+            <div class="flex flex-col lg:flex-row gap-6 h-full min-h-[600px]">
+                <!-- Job List -->
+                <div
+                    class="w-full lg:w-1/3 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50">
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input
+                                class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                                placeholder="搜索岗位..." type="text" />
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-2 space-y-2" id="job-list-container">
+                        <!-- Job items will be injected here via JS -->
+                    </div>
+                </div>
+                <!-- Job Detail & Analysis -->
+                <div
+                    class="w-full lg:w-2/3 bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col relative">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-50 z-10"
+                        id="matching-placeholder">
+                        <i class="fa-solid fa-hand-pointer text-4xl mb-4"></i>
+                        <p>请从左侧选择一个岗位进行分析</p>
+                    </div>
+                    <div class="hidden h-full flex flex-col" id="matching-content">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 class="text-2xl font-bold text-slate-800" id="match-job-title">岗位名称</h3>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                                        id="match-job-industry">计算机/互联网</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
+                                        id="match-match-rate">匹配度: 0%</span>
+                                </div>
+                            </div>
+                            <button
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                                onclick="router('report')">
+                                生成规划报告 <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <!-- Radar Chart -->
+                            <div class="border border-gray-100 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-700 mb-2 text-sm">能力对比雷达图</h4>
+                                <div id="match-radar-chart" style="width: 100%; height: 300px;"></div>
+                            </div>
+                            <!-- Dimension Scores -->
+                            <div class="space-y-4">
+                                <h4 class="font-bold text-gray-700 mb-2 text-sm">四维能力分析</h4>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>基础要求</span>
+                                        <span class="font-bold" id="score-basic">0</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-600 h-2 rounded-full" id="bar-basic" style="width: 0%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>职业技能</span>
+                                        <span class="font-bold" id="score-vocational">0</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-purple-600 h-2 rounded-full" id="bar-vocational"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>职业素养</span>
+                                        <span class="font-bold" id="score-literacy">0</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-600 h-2 rounded-full" id="bar-literacy" style="width: 0%">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span>发展潜力</span>
+                                        <span class="font-bold" id="score-potential">0</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-orange-500 h-2 rounded-full" id="bar-potential"
+                                            style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Gap Analysis Text -->
+                        <div class="flex-1 bg-gray-50 rounded-lg p-4 overflow-y-auto">
+                            <h4 class="font-bold text-gray-700 mb-2 text-sm">差距分析与建议</h4>
+                            <div class="text-sm text-gray-600 leading-relaxed" id="gap-analysis-text">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- SECTION: REPORT -->
+        <section class="hidden p-6 md:p-10 max-w-5xl mx-auto" id="view-report">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">职业生涯发展报告</h2>
+                <div class="flex gap-3">
+                    <button
+                        class="text-sm bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                        onclick="polishReport()">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 智能润色
+                    </button>
+                    <button
+                        class="text-sm bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                        onclick="checkCompleteness()">
+                        <i class="fa-solid fa-check-double mr-1"></i> 完整性检查
+                    </button>
+                    <button
+                        class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-md"
+                        onclick="exportReport()">
+                        <i class="fa-solid fa-download mr-1"></i> 导出报告
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white shadow-lg rounded-xl overflow-hidden min-h-[800px]">
+                <!-- Report Header -->
+                <div class="bg-slate-900 text-white p-8 text-center">
+                    <h1 class="text-3xl font-bold mb-2">大学生职业生涯发展规划书</h1>
+                    <p class="text-slate-400 text-sm">基于AI智能分析生成</p>
+                    <div class="mt-4 flex justify-center gap-8 text-sm">
+                        <div>姓名: <span class="font-bold text-white" id="report-name">--</span></div>
+                        <div>专业: <span class="font-bold text-white" id="report-major">--</span></div>
+                        <div>日期: <span class="font-bold text-white" id="report-date">2026-03-17</span></div>
+                    </div>
+                </div>
+                <!-- Report Body -->
+                <div class="p-8 md:p-12 space-y-10">
+                    <!-- Section 1: Goal -->
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 border-l-4 border-blue-600 pl-3 mb-4">一、 职业目标设定</h3>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
+                            <p class="text-sm text-blue-800 font-bold">推荐目标岗位</p>
+                            <p class="text-2xl font-bold text-slate-900 mt-1" id="report-target-job">--</p>
+                        </div>
+                        <div class="p-4 border border-gray-200 rounded-lg min-h-[100px] focus:ring-2 focus:ring-blue-100 outline-none"
+                            contenteditable="true" id="report-goal-text">
+                            <!-- Editable content -->
+                        </div>
+                    </div>
+                    <!-- Section 2: Path Visualization -->
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 border-l-4 border-purple-600 pl-3 mb-4">二、 职业发展路径规划
+                        </h3>
+                        <div class="w-full h-[400px] border border-gray-100 rounded-lg p-2" id="report-path-chart">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 text-center">注：蓝色节点为当前推荐岗位，绿色为垂直晋升路径，橙色为横向换岗路径</p>
+                    </div>
+                    <!-- Section 3: Action Plan -->
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 border-l-4 border-green-600 pl-3 mb-4">三、 行动计划与成果展示
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="bg-green-100 px-4 py-2 font-bold text-green-800 text-sm">短期计划 (3个月)</div>
+                                <div class="p-4 min-h-[150px] outline-none text-sm text-gray-700" contenteditable="true"
+                                    id="report-plan-short">
+                                    <!-- Editable -->
+                                </div>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                <div class="bg-orange-100 px-4 py-2 font-bold text-orange-800 text-sm">中期计划 (1年)</div>
+                                <div class="p-4 min-h-[150px] outline-none text-sm text-gray-700" contenteditable="true"
+                                    id="report-plan-mid">
+                                    <!-- Editable -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Section 4: Evaluation -->
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 border-l-4 border-gray-600 pl-3 mb-4">四、 评估与调整</h3>
+                        <div class="p-4 border border-gray-200 rounded-lg min-h-[100px] focus:ring-2 focus:ring-blue-100 outline-none text-sm text-gray-700"
+                            contenteditable="true">
+                            <p>评估周期：每季度进行一次复盘。</p>
+                            <p>评估指标：技能掌握程度（证书获取/项目完成度）、实习表现评价、人岗匹配度变化。</p>
+                            <p>调整机制：若行业发生重大技术变革（如AI新技术爆发），需立即更新技能树并调整学习路径。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA EMBEDDING (Simulating external files) ---
+
+        // 1. Job Profiles (10 typical jobs)
+        const JOB_PROFILES = [
+            {
+                id: 1, title: "机器学习工程师",
+                scores: { skill: 95, cert: 30, innovation: 90, learning: 95, resilience: 80, communication: 75, internship: 70 },
+                weights: { basic: 0.2, vocational: 0.4, literacy: 0.2, potential: 0.2 },
+                desc: "要求精通Python/PyTorch，具备算法创新能力，能适应高迭代节奏。"
+            },
+            {
+                id: 2, title: "后端开发工程师",
+                scores: { skill: 85, cert: 20, innovation: 70, learning: 80, resilience: 85, communication: 75, internship: 60 },
+                weights: { basic: 0.25, vocational: 0.35, literacy: 0.25, potential: 0.15 },
+                desc: "掌握Java/Go/Node.js，熟悉微服务架构，需承担线上维护压力。"
+            },
+            {
+                id: 3, title: "前端开发工程师",
+                scores: { skill: 80, cert: 20, innovation: 75, learning: 85, resilience: 75, communication: 80, internship: 65 },
+                weights: { basic: 0.2, vocational: 0.4, literacy: 0.3, potential: 0.1 },
+                desc: "熟练JS/Vue/React，关注用户体验，需与多端协作。"
+            },
+            {
+                id: 4, title: "测试开发工程师",
+                scores: { skill: 75, cert: 20, innovation: 65, learning: 75, resilience: 80, communication: 80, internship: 60 },
+                weights: { basic: 0.3, vocational: 0.3, literacy: 0.3, potential: 0.1 },
+                desc: "掌握自动化测试框架，熟悉CI/CD，需应对密集回归测试。"
+            },
+            {
+                id: 5, title: "全栈开发工程师",
+                scores: { skill: 90, cert: 20, innovation: 80, learning: 90, resilience: 90, communication: 85, internship: 70 },
+                weights: { basic: 0.2, vocational: 0.4, literacy: 0.2, potential: 0.2 },
+                desc: "前后端通吃，掌握Docker/Cloud，能独立完成端到端交付。"
+            },
+            {
+                id: 6, title: "数据科学家",
+                scores: { skill: 85, cert: 20, innovation: 85, learning: 90, resilience: 75, communication: 70, internship: 65 },
+                weights: { basic: 0.2, vocational: 0.3, literacy: 0.2, potential: 0.3 },
+                desc: "精通Python/SQL/Stats，能从数据中发现业务价值，需解释复杂模型。"
+            },
+            {
+                id: 7, title: "DevOps工程师",
+                scores: { skill: 85, cert: 30, innovation: 75, learning: 85, resilience: 95, communication: 80, internship: 60 },
+                weights: { basic: 0.3, vocational: 0.4, literacy: 0.2, potential: 0.1 },
+                desc: "掌握K8s/Shell/Cloud，负责7x24小时值班与应急响应。"
+            },
+            {
+                id: 8, title: "UI/UX设计师",
+                scores: { skill: 80, cert: 10, innovation: 90, learning: 75, resilience: 70, communication: 85, internship: 75 },
+                weights: { basic: 0.1, vocational: 0.4, literacy: 0.3, potential: 0.2 },
+                desc: "熟练Figma/Sketch，具备审美与用户研究能力，作品集是关键。"
+            },
+            {
+                id: 9, title: "算法工程师",
+                scores: { skill: 95, cert: 20, innovation: 95, learning: 95, resilience: 85, communication: 70, internship: 80 },
+                weights: { basic: 0.2, vocational: 0.4, literacy: 0.1, potential: 0.3 },
+                desc: "精通C++/Python/LeetCode，具备原创算法设计能力，需跟进顶会论文。"
+            },
+            {
+                id: 10, title: "区块链开发工程师",
+                scores: { skill: 85, cert: 20, innovation: 90, learning: 90, resilience: 80, communication: 70, internship: 60 },
+                weights: { basic: 0.2, vocational: 0.4, literacy: 0.2, potential: 0.2 },
+                desc: "掌握Solidity/Web3，探索新型共识机制，适应监管与市场波动。"
+            }
+        ];
+
+        // 2. Job Paths (Vertical & Horizontal)
+        const JOB_PATHS = {
+            "后端开发工程师": {
+                vertical: ["后端开发工程师", "高级后端开发工程师", "技术专家", "架构师"],
+                horizontal: [
+                    { target: "全栈开发工程师", desc: "补充前端框架知识，结合Docker实践。" },
+                    { target: "DevOps工程师", desc: "学习Shell/K8s，参与CI/CD建设。" }
+                ]
+            },
+            "前端开发工程师": {
+                vertical: ["前端开发工程师", "资深前端开发工程师", "前端技术负责人", "全栈架构师"],
+                horizontal: [
+                    { target: "UI/UX设计师", desc: "加强Figma技能与用户研究方法。" },
+                    { target: "全栈开发工程师", desc: "学习Node.js/Django，实现前后端联调。" }
+                ]
+            },
+            "测试开发工程师": {
+                vertical: ["测试开发工程师", "自动化测试工程师", "质量保障专家", "DevOps工程师"],
+                horizontal: [
+                    { target: "DevOps工程师", desc: "深入IaC理念，学习Terraform/Ansible。" },
+                    { target: "数据科学家", desc: "补充Pandas/Scikit-learn，参与A/B测试分析。" }
+                ]
+            },
+            "数据科学家": {
+                vertical: ["数据科学家", "高级数据科学家", "数据挖掘专家", "AI算法研究员"],
+                horizontal: [
+                    { target: "机器学习工程师", desc: "强化PyTorch训练能力，参与模型部署。" },
+                    { target: "算法工程师", desc: "深入LeetCode算法题，强化理论基础。" }
+                ]
+            },
+            "机器学习工程师": {
+                vertical: ["机器学习工程师", "高级ML工程师", "AI架构师"],
+                horizontal: [
+                    { target: "算法工程师", desc: "系统学习ACM算法知识体系。" },
+                    { target: "区块链开发工程师", desc: "学习Solidity，探索去中心化AI应用。" }
+                ]
+            },
+            // Default paths for others not explicitly detailed in prompt but needed for graph
+            "default": {
+                vertical: ["初级岗位", "中级岗位", "高级岗位", "专家/管理"],
+                horizontal: []
+            }
+        };
+
+        // --- STATE MANAGEMENT ---
+        const appState = {
+            student: {
+                name: "",
+                major: "",
+                edu: "",
+                year: "",
+                scores: { skill: 70, cert: 40, innovation: 60, learning: 75, resilience: 65, communication: 70, internship: 50 },
+                analyzed: false
+            },
+            selectedJobId: null,
+            matchResults: {}
+        };
+
+        // --- NAVIGATION & UI ---
+        function router(viewId) {
+            // Hide all sections
+            document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
+            // Show target section
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            // Update Nav State
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-blue-400');
+                btn.classList.add('text-slate-300');
+            });
+            const activeBtn = document.getElementById(`nav-${viewId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-slate-800', 'text-blue-400');
+                activeBtn.classList.remove('text-slate-300');
+            }
+
+            // Trigger specific renders
+            if (viewId === 'matching') renderJobList();
+            if (viewId === 'report') generateReportContent();
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu.classList.contains('translate-x-full')) {
+                menu.classList.remove('translate-x-full');
+            } else {
+                menu.classList.add('translate-x-full');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            let icon = 'fa-info-circle';
+            if (type === 'success') icon = 'fa-circle-check';
+            if (type === 'warning') icon = 'fa-triangle-exclamation';
+
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            // Animation
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        function updateRangeVal(key, val) {
+            document.getElementById(`val-${key}`).innerText = val;
+            appState.student.scores[key] = parseInt(val);
+        }
+
+        // --- PROFILE SECTION LOGIC ---
+        document.getElementById('resume-upload').addEventListener('change', function (e) {
+            if (e.target.files.length > 0) {
+                document.getElementById('upload-feedback').classList.remove('hidden');
+                showToast('简历上传成功，正在解析...', 'info');
+                // Simulate parsing delay
+                setTimeout(() => {
+                    showToast('简历解析完成，已更新能力预估值', 'success');
+                    // Simulate updating some scores based on "resume"
+                    updateRangeVal('skill', 80);
+                    document.querySelector('input[oninput*="skill"]').value = 80;
+                    updateRangeVal('internship', 70);
+                    document.querySelector('input[oninput*="internship"]').value = 70;
+                }, 1500);
+            }
+        });
+
+        function analyzeProfile() {
+            const btn = document.getElementById('btn-analyze');
+            const originalContent = btn.innerHTML;
+
+            // Loading state
+            btn.disabled = true;
+            btn.innerHTML = `<div class="spinner"></div> 正在分析...`;
+
+            setTimeout(() => {
+                // Calculate Scores
+                const s = appState.student.scores;
+                const avg = Object.values(s).reduce((a, b) => a + b, 0) / 7;
+
+                // Completeness: Based on if basic info is filled
+                const hasInfo = document.getElementById('student-name').value !== "";
+                const completeness = hasInfo ? Math.min(100, Math.round(avg + 10)) : Math.round(avg * 0.8);
+
+                // Competitiveness: Weighted average
+                const competitiveness = Math.round(
+                    s.skill * 0.3 + s.innovation * 0.2 + s.learning * 0.2 + s.internship * 0.15 + s.cert * 0.05 + s.resilience * 0.05 + s.communication * 0.05
+                );
+
+                // Update UI
+                document.getElementById('score-completeness').innerText = completeness;
+                document.getElementById('score-competitiveness').innerText = competitiveness;
+                document.getElementById('profile-status').innerText = "已分析";
+                document.getElementById('profile-status').className = "text-green-500 font-medium";
+
+                appState.student.analyzed = true;
+                appState.student.name = document.getElementById('student-name').value || "学生";
+                appState.student.major = document.getElementById('student-major').value || "计算机类";
+
+                renderProfileChart();
+                showToast('画像构建完成', 'success');
+
+                // Reset Button
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }, 1000);
+        }
+
+        let profileChartInstance = null;
+        function renderProfileChart() {
+            const dom = document.getElementById('profile-chart');
+            if (profileChartInstance) profileChartInstance.dispose();
+
+            profileChartInstance = echarts.init(dom);
+            const s = appState.student.scores;
+
+            const option = {
+                radar: {
+                    indicator: [
+                        { name: '专业技能', max: 100 },
+                        { name: '证书', max: 100 },
+                        { name: '创新能力', max: 100 },
+                        { name: '学习能力', max: 100 },
+                        { name: '抗压能力', max: 100 },
+                        { name: '沟通能力', max: 100 },
+                        { name: '实习能力', max: 100 }
+                    ],
+                    radius: '65%',
+                    axisName: { color: '#666' }
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{
+                        value: [s.skill, s.cert, s.innovation, s.learning, s.resilience, s.communication, s.internship],
+                        name: '能力评估',
+                        areaStyle: { color: 'rgba(59, 130, 246, 0.5)' },
+                        lineStyle: { color: '#3b82f6' },
+                        itemStyle: { color: '#3b82f6' }
+                    }]
+                }]
+            };
+            profileChartInstance.setOption(option);
+        }
+
+        // --- MATCHING SECTION LOGIC ---
+        function renderJobList() {
+            const container = document.getElementById('job-list-container');
+            container.innerHTML = '';
+
+            JOB_PROFILES.forEach(job => {
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors border border-transparent ${appState.selectedJobId === job.id ? 'bg-blue-50 border-blue-200' : ''}`;
+                div.innerHTML = `
+                    <div class="font-bold text-gray-800 text-sm">${job.title}</div>
+                    <div class="text-xs text-gray-500 mt-1 truncate">${job.desc}</div>
+                `;
+                div.onclick = () => selectJob(job.id);
+                container.appendChild(div);
+            });
+        }
+
+        let matchRadarInstance = null;
+        function selectJob(jobId) {
+            appState.selectedJobId = jobId;
+            renderJobList(); // Re-render to update active state
+
+            const job = JOB_PROFILES.find(j => j.id === jobId);
+            const s = appState.student.scores;
+            const j = job.scores;
+
+            // Hide placeholder, show content
+            document.getElementById('matching-placeholder').classList.add('hidden');
+            document.getElementById('matching-content').classList.remove('hidden');
+
+            // Update Text Info
+            document.getElementById('match-job-title').innerText = job.title;
+
+            // Calculate Dimensions
+            // Basic: Skill + Cert
+            const scoreBasic = Math.round(((s.skill + s.cert) / 2 * 0.4 + (j.skill + j.cert) / 2 * 0.6)); // Weighted towards job req
+            // Vocational: Innovation + Learning + Internship
+            const scoreVoc = Math.round(((s.innovation + s.learning + s.internship) / 3 * 0.4 + (j.innovation + j.learning + j.internship) / 3 * 0.6));
+            // Literacy: Communication + Resilience
+            const scoreLit = Math.round(((s.communication + s.resilience) / 2 * 0.4 + (j.communication + j.resilience) / 2 * 0.6));
+            // Potential: Learning + Innovation (Future focus)
+            const scorePot = Math.round(((s.learning + s.innovation) / 2 * 0.4 + (j.learning + j.innovation) / 2 * 0.6));
+
+            // Total Match Score (Weighted)
+            const totalMatch = Math.round(
+                scoreBasic * job.weights.basic +
+                scoreVoc * job.weights.vocational +
+                scoreLit * job.weights.literacy +
+                scorePot * job.weights.potential
+            );
+
+            document.getElementById('match-match-rate').innerText = `匹配度: ${totalMatch}%`;
+            document.getElementById('match-match-rate').className = totalMatch > 80 ? "px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full" : "px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full";
+
+            // Update Bars
+            updateBar('basic', scoreBasic);
+            updateBar('vocational', scoreVoc);
+            updateBar('literacy', scoreLit);
+            updateBar('potential', scorePot);
+
+            // Render Radar
+            const dom = document.getElementById('match-radar-chart');
+            if (matchRadarInstance) matchRadarInstance.dispose();
+            matchRadarInstance = echarts.init(dom);
+
+            const option = {
+                radar: {
+                    indicator: [
+                        { name: '专业技能', max: 100 },
+                        { name: '证书', max: 100 },
+                        { name: '创新能力', max: 100 },
+                        { name: '学习能力', max: 100 },
+                        { name: '抗压能力', max: 100 },
+                        { name: '沟通能力', max: 100 },
+                        { name: '实习能力', max: 100 }
+                    ],
+                    radius: '65%'
+                },
+                legend: { data: ['学生', '岗位要求'], bottom: 0 },
+                series: [{
+                    type: 'radar',
+                    data: [
+                        {
+                            value: [s.skill, s.cert, s.innovation, s.learning, s.resilience, s.communication, s.internship],
+                            name: '学生',
+                            areaStyle: { opacity: 0.2 },
+                            color: '#3b82f6'
+                        },
+                        {
+                            value: [j.skill, j.cert, j.innovation, j.learning, j.resilience, j.communication, j.internship],
+                            name: '岗位要求',
+                            areaStyle: { opacity: 0.2 },
+                            color: '#ef4444'
+                        }
+                    ]
+                }]
+            };
+            matchRadarInstance.setOption(option);
+
+            // Generate Gap Text
+            const gaps = [];
+            if (s.skill < j.skill) gaps.push(`专业技能差距较大 (当前${s.skill} vs 要求${j.skill})，建议重点加强${job.title.split(' ')[0]}相关核心技术栈。`);
+            if (s.innovation < j.innovation) gaps.push(`创新能力有待提升，多参与算法竞赛或开源项目。`);
+            if (s.internship < j.internship) gaps.push(`缺乏实习经验，建议寻找相关实习机会积累项目实战经验。`);
+            if (gaps.length === 0) gaps.push("您的各项能力均已达到或超过岗位要求，非常有竞争力！");
+
+            document.getElementById('gap-analysis-text').innerHTML = gaps.map(g => `<p class="mb-2"><i class="fa-solid fa-circle-exclamation text-orange-400 mr-2"></i>${g}</p>`).join('');
+        }
+
+        function updateBar(type, score) {
+            document.getElementById(`score-${type}`).innerText = score;
+            document.getElementById(`bar-${type}`).style.width = `${score}%`;
+            // Color logic
+            const bar = document.getElementById(`bar-${type}`);
+            if (score >= 80) bar.className = bar.className.replace(/bg-\w+-600/, 'bg-green-500');
+            else if (score >= 60) bar.className = bar.className.replace(/bg-\w+-600/, 'bg-blue-600');
+            else bar.className = bar.className.replace(/bg-\w+-600/, 'bg-red-500');
+        }
+
+        // --- REPORT SECTION LOGIC ---
+        let pathChartInstance = null;
+
+        function generateReportContent() {
+            if (!appState.student.analyzed) {
+                showToast('请先在能力画像页面进行分析', 'warning');
+                router('profile');
+                return;
+            }
+
+            // Find best match if none selected
+            let targetJob = JOB_PROFILES.find(j => j.id === appState.selectedJobId);
+            if (!targetJob) {
+                // Simple logic to find highest match
+                let maxScore = -1;
+                JOB_PROFILES.forEach(j => {
+                    // Quick calc
+                    const s = appState.student.scores;
+                    const score = Math.abs(s.skill - j.scores.skill) + Math.abs(s.learning - j.scores.learning);
+                    // Lower diff is better, invert for logic
+                    if (100 - score > maxScore) {
+                        maxScore = 100 - score;
+                        targetJob = j;
+                    }
+                });
+            }
+
+            // Fill Basic Info
+            document.getElementById('report-name').innerText = appState.student.name;
+            document.getElementById('report-major').innerText = appState.student.major;
+            document.getElementById('report-target-job').innerText = targetJob.title;
+
+            // Fill Goal Text (Simulated AI)
+            const goalText = document.getElementById('report-goal-text');
+            if (goalText.innerText.trim() === "") {
+                goalText.innerHTML = `基于我的专业背景与能力评估，我计划将<strong>${targetJob.title}</strong>作为职业切入点。该岗位要求具备扎实的${targetJob.scores.skill > 80 ? '高难度' : '基础'}技术栈与良好的${targetJob.scores.innovation > 80 ? '创新思维' : '执行力'}。虽然目前我在某些维度上仍有差距，但我将通过系统学习与实践，在3年内达到行业资深水平。`;
+            }
+
+            // Fill Plans (Simulated AI)
+            const shortPlan = document.getElementById('report-plan-short');
+            if (shortPlan.innerText.trim() === "") {
+                shortPlan.innerHTML = `
+                <ul class="list-disc pl-4 space-y-1">
+                    <li>完成《${targetJob.title}入门与实践》课程学习，掌握核心语法。</li>
+                    <li>在GitHub上完成2个相关Demo项目，并上传作品集。</li>
+                    <li>每周刷LeetCode算法题 5 道，提升编程思维。</li>
+                    <li>投递至少 10 家相关企业的实习岗位。</li>
+                </ul>`;
+            }
+
+            const midPlan = document.getElementById('report-plan-mid');
+            if (midPlan.innerText.trim() === "") {
+                midPlan.innerHTML = `
+                <ul class="list-disc pl-4 space-y-1">
+                    <li>获得一份为期6个月的${targetJob.title}相关实习offer。</li>
+                    <li>深入理解源码，参与企业级项目开发，积累工程经验。</li>
+                    <li>考取行业相关认证（如有）。</li>
+                    <li>根据实习表现，争取转正机会或获取校招Return Offer。</li>
+                </ul>`;
+            }
+
+            // Render Path Chart
+            renderPathChart(targetJob.title);
+        }
+
+        function renderPathChart(jobTitle) {
+            const dom = document.getElementById('report-path-chart');
+            if (pathChartInstance) pathChartInstance.dispose();
+            pathChartInstance = echarts.init(dom);
+
+            const pathData = JOB_PATHS[jobTitle] || JOB_PATHS["default"];
+
+            // Construct Graph Data
+            const nodes = [];
+            const links = [];
+            const categories = [{ name: '当前' }, { name: '晋升' }, { name: '换岗' }];
+
+            // Add Current Node
+            nodes.push({ id: jobTitle, name: jobTitle, category: 0, symbolSize: 80, itemStyle: { color: '#3b82f6' } });
+
+            // Add Vertical Nodes
+            pathData.vertical.forEach((role, idx) => {
+                if (role !== jobTitle) {
+                    nodes.push({ id: role, name: role, category: 1, symbolSize: 60 - idx * 5, itemStyle: { color: '#10b981' } });
+                    // Link from previous
+                    const prev = idx === 0 ? jobTitle : pathData.vertical[idx - 1];
+                    links.push({ source: prev, target: role, label: { show: false } });
+                }
+            });
+
+            // Add Horizontal Nodes
+            pathData.horizontal.forEach(h => {
+                if (!nodes.find(n => n.name === h.target)) {
+                    nodes.push({ id: h.target, name: h.target, category: 2, symbolSize: 60, itemStyle: { color: '#f97316' } });
+                }
+                links.push({ source: jobTitle, target: h.target, lineStyle: { type: 'dashed' } });
+            });
+
+            const option = {
+                tooltip: {},
+                legend: [{ data: categories.map(a => a.name), bottom: 10 }],
+                series: [{
+                    type: 'graph',
+                    layout: 'none',
+                    data: nodes,
+                    links: links,
+                    categories: categories,
+                    roam: true,
+                    label: { show: true, position: 'bottom', fontSize: 10 },
+                    lineStyle: { color: 'source', curveness: 0.3 }
+                }]
+            };
+            pathChartInstance.setOption(option);
+        }
+
+        function polishReport() {
+            const editables = document.querySelectorAll('[contenteditable]');
+            editables.forEach(el => {
+                if (el.innerText.trim() !== "") {
+                    // Simulate AI polishing: Add professional prefixes or smooth sentences
+                    el.innerHTML = `<span style="color:#3b82f6">[AI润色]</span> ` + el.innerHTML.replace(/。/g, "，从而提升综合竞争力。");
+                }
+            });
+            showToast('报告已智能润色', 'success');
+        }
+
+        function checkCompleteness() {
+            const missing = [];
+            if (document.getElementById('report-goal-text').innerText.trim() === "") missing.push("职业目标");
+            if (document.getElementById('report-plan-short').innerText.trim() === "") missing.push("短期计划");
+
+            if (missing.length > 0) {
+                showToast(`报告不完整，缺少: ${missing.join(', ')}`, 'warning');
+            } else {
+                showToast('报告内容完整', 'success');
+            }
+        }
+
+        function exportReport() {
+            const name = appState.student.name || "学生";
+            const content = `
+大学生职业生涯发展规划报告
+-------------------------
+姓名: ${name}
+专业: ${appState.student.major}
+日期: ${new Date().toLocaleDateString()}
+
+一、 职业目标设定
+${document.getElementById('report-goal-text').innerText}
+
+二、 职业发展路径规划
+(图表路径已在报告中可视化展示)
+
+三、 行动计划
+短期计划:
+${document.getElementById('report-plan-short').innerText}
+
+中期计划:
+${document.getElementById('report-plan-mid').innerText}
+
+四、 评估与调整
+${document.querySelectorAll('#view-report [contenteditable]')[3].innerText}
+            `.trim();
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${name}_职业规划报告.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('报告已导出', 'success');
+        }
+
+        // Initialize
+        window.addEventListener('resize', () => {
+            if (profileChartInstance) profileChartInstance.resize();
+            if (matchRadarInstance) matchRadarInstance.resize();
+            if (pathChartInstance) pathChartInstance.resize();
+        });
+
+        // Initial Render
+        renderProfileChart();
+
+    </script>
+</body>
+
+</html>

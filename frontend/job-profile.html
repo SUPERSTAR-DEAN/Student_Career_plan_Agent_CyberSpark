@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>推荐岗位画像 - CyberSpark</title>
+  <link rel="stylesheet" href="/frontend/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .jp-page {
+      min-height: 100vh;
+      background: #eef2f7;
+      color: #0f172a;
+    }
+
+    .jp-shell {
+      display: flex;
+      max-width: 1400px;
+      margin: 0 auto;
+      min-height: calc(100vh - 0px);
+      background: #fff;
+      box-shadow: 0 0 0 1px #e2e8f0;
+    }
+
+    .jp-sidebar {
+      width: 300px;
+      flex-shrink: 0;
+      border-right: 1px solid #e2e8f0;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 14px;
+    }
+
+    .jp-sidebar h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #334155;
+    }
+
+    .jp-search {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+
+    .jp-sidebar-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 120px;
+    }
+
+    .jp-side-item {
+      text-align: left;
+      padding: 12px 12px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+
+    .jp-side-item:hover {
+      border-color: #93c5fd;
+      background: #eff6ff;
+    }
+
+    .jp-side-item.is-active {
+      border-color: #3b82f6;
+      background: #dbeafe;
+      box-shadow: 0 0 0 1px #3b82f6 inset;
+    }
+
+    .jp-side-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .jp-side-desc {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.45;
+      max-height: 2.9em;
+      overflow: hidden;
+    }
+
+    .jp-side-meta {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ea580c;
+    }
+
+    .jp-main {
+      flex: 1;
+      padding: 22px 26px 40px;
+      overflow-x: hidden;
+    }
+
+    .jp-topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .jp-title-block {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .jp-title {
+      margin: 0 0 10px;
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .jp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .jp-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .jp-tag--industry {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .jp-tag--match {
+      background: #ffedd5;
+      color: #c2410c;
+      border: 1px solid #fdba74;
+    }
+
+    .jp-cta {
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .jp-charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    @media (max-width: 960px) {
+      .jp-shell {
+        flex-direction: column;
+      }
+
+      .jp-sidebar {
+        width: 100%;
+        border-right: 0;
+        border-bottom: 1px solid #e2e8f0;
+        max-height: 320px;
+      }
+
+      .jp-charts {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .jp-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 14px 12px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .jp-card h3 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #334155;
+    }
+
+    .jp-radar-wrap {
+      position: relative;
+      height: min(360px, 52vw);
+      max-height: 380px;
+    }
+
+    .jp-bar-row {
+      margin-bottom: 14px;
+    }
+
+    .jp-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #475569;
+    }
+
+    .jp-bar-track {
+      height: 12px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .jp-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width .35s ease;
+    }
+
+    .jp-section {
+      margin-top: 22px;
+    }
+
+    .jp-section h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #3b82f6;
+    }
+
+    .jp-req-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .jp-req-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #475569;
+    }
+
+    .jp-req-card strong {
+      color: #1e293b;
+    }
+
+    .jp-skill-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .jp-skill-tags span {
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .jp-gap-list {
+      margin: 0;
+      padding-left: 1.15rem;
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .jp-gap-list li {
+      margin-bottom: 6px;
+    }
+
+    .jp-footer-actions {
+      margin-top: 28px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .jp-back {
+      background: #64748b;
+      color: #fff;
+      border: 0;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .jp-back:hover {
+      background: #475569;
+    }
+
+    .jp-empty {
+      padding: 48px 24px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .jp-nav {
+      background: rgba(4, 20, 74, 0.92);
+      color: #fff;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .jp-nav a {
+      color: #dbeafe;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .jp-nav a:hover {
+      color: #fff;
+    }
+
+    .jp-nav-brand {
+      font-weight: 800;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .jp-nav-logo-icon {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      object-fit: cover;
+      object-position: center;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+
+<body class="jp-page">
+  <header class="jp-nav">
+    <span class="jp-nav-brand">CyberSpark 职业规划</span>
+    <nav>
+      <a href="/">首页</a>
+      <a href="/profile-detail">画像分析</a>
+      <a href="/vertical-job-graph" data-transition="true">垂直岗位图谱</a>
+      <a href="/report" data-transition="true">生涯报告</a>
+    </nav>
+  </header>
+  <div id="appRoot">
+    <div class="jp-empty" id="emptyState" style="display:none">
+      <p>未选择岗位。请先在「画像分析」中点击推荐岗位。</p>
+      <button type="button" class="jp-back" onclick="location.href='/profile-detail'">返回画像分析</button>
+    </div>
+    <div class="jp-shell" id="mainShell" style="display:none">
+      <aside class="jp-sidebar">
+        <h2>推荐岗位</h2>
+        <input type="search" class="jp-search" id="jobSearch" placeholder="搜索岗位…" autocomplete="off" />
+        <div class="jp-sidebar-list" id="sidebarList"></div>
+      </aside>
+      <main class="jp-main">
+        <div class="jp-topbar">
+          <div class="jp-title-block">
+            <h1 class="jp-title" id="jobTitle">—</h1>
+            <div class="jp-tags">
+              <span class="jp-tag jp-tag--industry" id="industryTag">行业</span>
+              <span class="jp-tag jp-tag--match" id="matchTag">匹配度：—</span>
+            </div>
+          </div>
+          <a href="/report" class="btn btn-primary jp-cta" data-transition="true">生成规划报告 →</a>
+        </div>
+
+        <div class="jp-charts">
+          <div class="jp-card">
+            <h3>能力对比雷达图</h3>
+            <div class="jp-radar-wrap"><canvas id="radarCanvas"></canvas></div>
+          </div>
+          <div class="jp-card">
+            <h3>四维能力分析</h3>
+            <div id="fourDimBars"></div>
+          </div>
+        </div>
+
+        <section class="jp-section">
+          <h2>岗位要求摘要</h2>
+          <div class="jp-req-grid" id="requirementsGrid"></div>
+        </section>
+
+        <section class="jp-section">
+          <h2>技能要求</h2>
+          <div class="jp-skill-tags" id="skillRequirements"></div>
+        </section>
+
+        <section class="jp-section">
+          <h2>差距分析与建议</h2>
+          <ul class="jp-gap-list" id="gapBullets"></ul>
+        </section>
+
+        <div class="jp-footer-actions">
+          <button type="button" class="jp-back" onclick="location.href='/profile-detail'">返回画像分析</button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="/frontend/main.js"></script>
+  <script>
+    let radarChart = null;
+    let allMatches = [];
+    let studentProfile = null;
+    let filteredIndices = [];
+
+    function levelToPct(v, def) {
+      const n = parseInt(v, 10);
+      if (n >= 1 && n <= 5) return ((n - 1) / 4) * 100;
+      return def;
+    }
+
+    /** 旧缓存无 radar_chart 时，用 student_profile + 岗位粗算 */
+    function fallbackRadarStudent(sp, job) {
+      const keys = Array.isArray(sp.professional_skills) ? sp.professional_skills : [];
+      const prof = keys.length ? Math.min(95, 28 + keys.length * 9) : 28;
+      const ex = Array.isArray(sp.experience) ? sp.experience.length : 0;
+      const intern = Math.min(100, 16 + ex * 21);
+      const comm = levelToPct(sp.communication, 42);
+      const stress = levelToPct(sp.stress_resistance, 42);
+      const learn = levelToPct(sp.learning_ability, 44);
+      const innov = levelToPct(sp.innovation_ability, 40);
+      const certs = Array.isArray(sp.certificates) ? sp.certificates.length : 0;
+      const certSc = Math.min(100, certs * 26);
+      const desc = ((job.job_description || "") + (job.job_name || "")).toLowerCase();
+      const nReq = (job.required_skills || []).length || 1;
+      let rawProf = Math.min(94, 66 + Math.min(24, nReq * 1.7) + (desc.includes("架构") || desc.includes("高级") ? 5 : 0));
+      const rawIntern = /实习|经验|项目|工作/.test(desc) ? 80 : 65;
+      const rawComm = 78 + (/沟通|表达|协调|汇报/.test(desc) ? 8 : 0);
+      const rawStress = 76 + (/抗压|压力|高强度|节奏/.test(desc) ? 9 : 0);
+      const rawLearn = 78 + (/学习|成长|新技术|自学/.test(desc) ? 7 : 0);
+      const rawInnov = 76 + (/创新|研发|算法|科研|专利/.test(desc) ? 9 : 0);
+      const jc = (job.basic_requirements && job.basic_requirements.certificates) || [];
+      const rawCert = Math.min(92, 54 + jc.length * 8.5);
+      const stu = [prof, intern, comm, stress, learn, innov, certSc].map((x) => Math.round(x * 10) / 10);
+      const raw = [rawProf, rawIntern, rawComm, rawStress, rawLearn, rawInnov, rawCert];
+      const jobReq = stu.map((s, i) => Math.min(98, Math.max(s + 5, raw[i])));
+      return {
+        labels: ["专业技能", "实习能力", "沟通能力", "抗压能力", "学习能力", "创新能力", "证书"],
+        student: stu,
+        job_required: jobReq.map((x) => Math.round(x * 10) / 10),
+      };
+    }
+
+    function fallbackFourDims(ds) {
+      const d = ds || {};
+      const basic = Number(d.basic_requirements) || 0;
+      const skills = Number(d.professional_skills) || 0;
+      const ct = Number(d.communication_teamwork) || 0;
+      const sp = Number(d.stress_problem_solving) || 0;
+      const quality = (ct + sp) / 2;
+      const la = Number(d.learning_ability) || 0;
+      const inn = Number(d.innovation_ability) || 0;
+      const dev = (la + inn) / 2;
+      return [
+        { key: "basic", name: "基础要求", score: Math.round(basic * 10) / 10, color: "#ef4444" },
+        { key: "skills", name: "职业技能", score: Math.round(skills * 10) / 10, color: "#3b82f6" },
+        { key: "quality", name: "职业素养", score: Math.round(quality * 10) / 10, color: "#2563eb" },
+        { key: "potential", name: "发展潜力", score: Math.round(dev * 10) / 10, color: "#f97316" },
+      ];
+    }
+
+    function fallbackGapBullets(job, ds) {
+      const g = job.gap_analysis || {};
+      const lines = [];
+      const ms = g.missing_skills || [];
+      const jn = job.job_name || "目标岗位";
+      if (ms.length)
+        lines.push(`专业技能：岗位「${jn}」强调 ${ms.slice(0, 5).join("、")}${ms.length > 5 ? " 等" : ""}，建议对照 JD 制定补学路线。`);
+      (g.soft_dimension_hints || []).slice(0, 5).forEach((t) => t && lines.push(t));
+      (g.core_strengths || []).slice(0, 2).forEach((t) => t && lines.push(t));
+      const ps = Number(ds.professional_skills);
+      if (ps < 62 && !lines.some((x) => x.includes("职业技能")))
+        lines.push(`职业技能维度约 ${ps.toFixed(0)} 分，建议围绕「${jn}」高频技能做专项补强与项目沉淀。`);
+      if (!lines.length) lines.push(`建议结合「${jn}」JD 做一次技能清单对照，把相关课程与经历显性写进简历。`);
+      return lines;
+    }
+
+    function getRadarPayload(job) {
+      if (job.radar_chart && job.radar_chart.labels && job.radar_chart.student && job.radar_chart.job_required)
+        return job.radar_chart;
+      return fallbackRadarStudent(studentProfile || {}, job);
+    }
+
+    function getFourDims(job) {
+      if (job.four_dimensions && job.four_dimensions.length) return job.four_dimensions;
+      return fallbackFourDims(job.dimension_scores || {});
+    }
+
+    function getGapLines(job) {
+      if (job.gap_suggestions && job.gap_suggestions.length) return job.gap_suggestions;
+      return fallbackGapBullets(job, job.dimension_scores || {});
+    }
+
+    function renderRadar(job) {
+      const ctx = document.getElementById("radarCanvas");
+      if (!ctx || typeof Chart === "undefined") return;
+      const rc = getRadarPayload(job);
+      if (radarChart) radarChart.destroy();
+      radarChart = new Chart(ctx, {
+        type: "radar",
+        data: {
+          labels: rc.labels,
+          datasets: [
+            {
+              label: "学生",
+              data: rc.student,
+              borderColor: "rgba(59, 130, 246, 1)",
+              backgroundColor: "rgba(59, 130, 246, 0.18)",
+              borderWidth: 2,
+              pointRadius: 3,
+            },
+            {
+              label: "岗位要求",
+              data: rc.job_required,
+              borderColor: "rgba(34, 197, 94, 1)",
+              backgroundColor: "rgba(34, 197, 94, 0.12)",
+              borderWidth: 2,
+              pointRadius: 3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { stepSize: 20, backdropColor: "transparent" },
+              grid: { color: "rgba(148, 163, 184, 0.35)" },
+              angleLines: { color: "rgba(148, 163, 184, 0.35)" },
+              pointLabels: { font: { size: 11 } },
+            },
+          },
+          plugins: { legend: { position: "bottom" } },
+        },
+      });
+    }
+
+    function renderFourDims(job) {
+      const el = document.getElementById("fourDimBars");
+      const dims = getFourDims(job);
+      el.innerHTML = dims
+        .map(
+          (d) => `
+        <div class="jp-bar-row">
+          <div class="jp-bar-label"><span>${d.name}</span><span>${Number(d.score).toFixed(1)}</span></div>
+          <div class="jp-bar-track"><div class="jp-bar-fill" style="width:${Math.min(100, Math.max(0, d.score))}%;background:${d.color || "#3b82f6"}"></div></div>
+        </div>`
+        )
+        .join("");
+    }
+
+    function renderRequirements(job) {
+      const basicReq = job.basic_requirements || {};
+      const proSkills = job.professional_skills || {};
+      const skillList = Array.isArray(proSkills.skills) ? proSkills.skills : (proSkills.skills ? [proSkills.skills] : []);
+      const proQuality = job.professional_quality || {};
+      const devPotential = job.development_potential || {};
+      const grid = document.getElementById("requirementsGrid");
+      grid.innerHTML = `
+        <div class="jp-req-card"><strong>基础要求</strong><br/>学历：${basicReq.education || "—"}<br/>证书：${(basicReq.certificates && basicReq.certificates.length) ? basicReq.certificates.join("、") : "—"}<br/>实习/经验：${basicReq.internship_experience || "—"}<br/>技术深度：${basicReq.technical_depth || "—"}</div>
+        <div class="jp-req-card"><strong>职业技能</strong><br/>${skillList.length ? skillList.join("、") : "—"}<br/>技术深度：${proSkills.technical_depth || "—"}</div>
+        <div class="jp-req-card"><strong>职业素养</strong><br/>沟通：${proQuality.communication || "—"}<br/>协作：${proQuality.teamwork || "—"}<br/>抗压：${proQuality.stress_resistance || "—"}<br/>问题解决：${proQuality.problem_solving || "—"}</div>
+        <div class="jp-req-card"><strong>发展潜力</strong><br/>学习：${devPotential.learning_ability || "—"}<br/>创新：${devPotential.innovation_ability || "—"}</div>`;
+    }
+
+    function renderSkills(job) {
+      const req = job.required_skills || [];
+      const el = document.getElementById("skillRequirements");
+      el.innerHTML = req.length ? req.map((s) => `<span>${s}</span>`).join("") : "<span style=color:#64748b;font-size:13px>暂无技能关键词</span>";
+    }
+
+    function renderGaps(job) {
+      const lines = getGapLines(job);
+      document.getElementById("gapBullets").innerHTML = lines.map((t) => `<li>${escapeHtml(t)}</li>`).join("");
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function renderHeader(job) {
+      document.getElementById("jobTitle").textContent = job.job_display_name || job.job_name || "未命名岗位";
+      const ind = (job.industry || "").trim() || "计算机/互联网";
+      document.getElementById("industryTag").textContent = ind;
+      const overallN = Number(job.overall_score ?? job.total_score ?? 0);
+      const pct = Number.isFinite(overallN) ? overallN.toFixed(1) : "0.0";
+      document.getElementById("matchTag").textContent = `匹配度：${pct}%`;
+    }
+
+    function buildSidebar() {
+      const raw = localStorage.getItem("careerPlanLastResult");
+      let list = [];
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          studentProfile = data.student_profile || null;
+          list = (data.match_results || []).slice(0, 10);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      const one = localStorage.getItem("selectedJobData");
+      if (!list.length && one) {
+        try {
+          list = [JSON.parse(one)];
+        } catch (e) { }
+      }
+      allMatches = list;
+      applyFilter("");
+    }
+
+    function applyFilter(q) {
+      const ql = (q || "").trim().toLowerCase();
+      filteredIndices = [];
+      allMatches.forEach((job, i) => {
+        const t = ((job.job_display_name || "") + (job.job_name || "") + (job.job_description || "")).toLowerCase();
+        if (!ql || t.includes(ql)) filteredIndices.push(i);
+      });
+      const box = document.getElementById("sidebarList");
+      box.innerHTML = "";
+      if (!filteredIndices.length) {
+        box.innerHTML = "<p style=color:#64748b;font-size:13px;padding:8px>无匹配筛选结果</p>";
+        return;
+      }
+      const preferred = parseInt(localStorage.getItem("selectedJobIndex") || "0", 10);
+      const sel = filteredIndices.includes(preferred) ? preferred : filteredIndices[0];
+
+      filteredIndices.forEach((idx) => {
+        const job = allMatches[idx];
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.jobIndex = String(idx);
+        btn.className = "jp-side-item" + (idx === sel ? " is-active" : "");
+        const score = Number(job.overall_score ?? job.total_score ?? 0);
+        const sc = Number.isFinite(score) ? score.toFixed(1) : "0.0";
+        const sideTitle = job.job_display_name || job.job_name || "岗位";
+        btn.innerHTML = `<div class="jp-side-title">${sideTitle}</div><div class="jp-side-desc">${(job.job_description || "").slice(0, 72)}${(job.job_description || "").length > 72 ? "…" : ""}</div><div class="jp-side-meta">${sc} 分</div>`;
+        btn.addEventListener("click", () => selectJob(idx));
+        box.appendChild(btn);
+      });
+    }
+
+    function selectJob(index) {
+      const job = allMatches[index];
+      if (!job) return;
+      localStorage.setItem("selectedJobIndex", String(index));
+      localStorage.setItem("selectedJobData", JSON.stringify(job));
+      document.querySelectorAll(".jp-side-item").forEach((el) => {
+        el.classList.toggle("is-active", el.dataset.jobIndex === String(index));
+      });
+      renderHeader(job);
+      renderRadar(job);
+      renderFourDims(job);
+      renderRequirements(job);
+      renderSkills(job);
+      renderGaps(job);
+    }
+
+    function init() {
+      buildSidebar();
+      const selIdx = parseInt(localStorage.getItem("selectedJobIndex") || "0", 10);
+      const one = localStorage.getItem("selectedJobData");
+      if (!allMatches.length && !one) {
+        document.getElementById("emptyState").style.display = "block";
+        return;
+      }
+      document.getElementById("mainShell").style.display = "flex";
+      document.getElementById("emptyState").style.display = "none";
+      let startIdx = selIdx;
+      if (!allMatches.length && one) {
+        try {
+          const j = JSON.parse(one);
+          allMatches = [j];
+          startIdx = 0;
+        } catch (e) { }
+      } else if (!filteredIndices.includes(startIdx)) startIdx = filteredIndices[0] ?? 0;
+      if (allMatches.length && startIdx !== undefined && allMatches[startIdx]) selectJob(startIdx);
+      document.getElementById("jobSearch").addEventListener("input", (e) => {
+        applyFilter(e.target.value);
+        const first = filteredIndices[0];
+        if (first !== undefined) selectJob(first);
+      });
+    }
+
+    window.addEventListener("load", init);
+  </script>
+</body>
+
+</html>

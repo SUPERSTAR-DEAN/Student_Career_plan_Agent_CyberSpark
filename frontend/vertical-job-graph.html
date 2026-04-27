@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>垂直岗位图谱 - CyberSpark</title>
+  <link rel="stylesheet" href="/frontend/styles.css" />
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .vg-page {
+      min-height: 100vh;
+      background-color: #0a1f5c;
+      background-image: url('/assets/wallpaper.png.jpg');
+      background-repeat: no-repeat;
+      background-position: center top;
+      background-size: cover;
+      background-attachment: fixed;
+    }
+
+    .vg-hero {
+      margin: 0;
+      padding-bottom: 8px;
+    }
+
+    .vg-main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px 48px;
+    }
+
+    .vg-intro {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .vg-section {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .vg-section h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .vg-section p.sub {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .vg-net {
+      width: 100%;
+      height: min(420px, 55vh);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    /* 垂直晋升图：大画布 + 轻微边框便于辨认绘图区 */
+    .vg-net-tall {
+      height: min(920px, 92vh);
+      min-height: 560px;
+    }
+
+    .vg-status {
+      font-size: 14px;
+      color: #64748b;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .vg-error {
+      color: #b91c1c;
+      background: #fef2f2;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .hover-panel {
+      position: fixed;
+      top: 100px;
+      right: 16px;
+      width: min(380px, calc(100vw - 32px));
+      max-height: min(78vh, 640px);
+      overflow-y: auto;
+      z-index: 10050;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+      padding: 14px 14px 16px;
+      display: none;
+    }
+
+    .hover-panel h4 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      color: #0f172a;
+    }
+
+    .hover-panel .meta {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+
+    .hover-panel .block {
+      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #334155;
+    }
+
+    .hover-panel .block strong {
+      color: #0f172a;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .hover-panel .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .hover-panel .tag-ok {
+      background: #dcfce7;
+      color: #166534;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .hover-panel .tag-gap {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .hover-panel .tag-skill {
+      background: #f1f5f9;
+      color: #334155;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .hover-panel .radar-wrap {
+      height: 220px;
+      position: relative;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .hover-panel {
+        right: 8px;
+        left: 8px;
+        width: auto;
+        top: auto;
+        bottom: 12px;
+        max-height: 45vh;
+      }
+    }
+  </style>
+</head>
+
+<body class="report-page vg-page">
+  <div class="header-area" id="sticky-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3">
+          <div class="header-logo">
+            <a href="/new-home"><span class="header-logo-text">CyberSpark大学生职业生涯规划</span></a>
+          </div>
+        </div>
+        <div class="col-lg-9">
+          <button type="button" class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>
+          <div class="header-menu-wrap" id="headerMenuWrap">
+            <div class="header-menu">
+              <ul>
+                <li><a href="/new-home">网站首页</a></li>
+                <li class="menu-item-has-children">
+                  <a href="#">生涯规划<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/profile" data-transition="true">个人信息填写</a></li>
+                    <li><a href="/resume" data-transition="true">个人简历上传</a></li>
+                    <li><a href="/report" data-transition="true">生涯报告生成</a></li>
+                    <li><a href="/profile-detail" data-transition="true">画像分析</a></li>
+                    <li><a href="/vertical-job-graph" data-transition="true">垂直岗位图谱</a></li>
+                  </ul>
+                </li>
+                <li><a href="/consult" data-transition="true">AI 实时咨询</a></li>
+              </ul>
+            </div>
+            <a class="login-btn" href="#">会员登陆</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero-area style-one d-flex align-items-center page-hero vg-hero">
+    <div class="hero-area-overlay" aria-hidden="true"></div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="section-title left style-one">
+          <p class="section-subtitle">生涯规划 · 岗位关系</p>
+          <h1>垂直岗位图谱</h1>
+          <p class="hero-desc">基于岗位库中的 <strong>计算机 / IT</strong> 子集，展示晋升链与换岗关系；锚点来自最近一次规划分析。悬停节点可看岗位详情与雷达对比。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="vg-main inner-page" style="padding-top: 0;">
+    <div id="loadError" class="vg-error" style="display:none;"></div>
+    <div class="vg-intro" id="vgIntro">
+      正在加载… 仅含 <strong>计算机 / IT</strong> 岗位；首次加载若较慢属正常。请先完成「个人信息填写」或「简历上传」以生成锚点。
+    </div>
+
+    <section class="vg-section">
+      <h2>垂直岗位图谱</h2>
+      <p class="sub">实线箭头为晋升关系；<strong>同名岗位已合并</strong>。力导向布局、稳定后可缩放拖动。悬停看详情。</p>
+      <div id="netVertical" class="vg-net vg-net-tall"></div>
+      <div id="emptyVertical" class="vg-status" style="display:none;">暂无垂直路径数据（可尝试先完成规划分析）。</div>
+    </section>
+
+    <section class="vg-section">
+      <h2>换岗路径图谱</h2>
+      <p class="sub">虚线为换岗路径；同名已合并。至多 6 锚点、每点 2～5 条出边。悬停看详情。</p>
+      <div id="netLateral" class="vg-net"></div>
+      <div id="emptyLateral" class="vg-status" style="display:none;">暂无换岗路径数据。</div>
+    </section>
+  </main>
+
+  <div id="hoverPanel" class="hover-panel" role="dialog" aria-label="岗位详情">
+    <h4 id="hpName">—</h4>
+    <div class="meta" id="hpMeta"></div>
+    <div class="block"><strong>岗位描述（节选）</strong><span id="hpDesc">—</span></div>
+    <div class="block">
+      <strong>基础要求摘要</strong>
+      <div id="hpBasic">—</div>
+    </div>
+    <div class="block">
+      <strong>核心技能要求</strong>
+      <div class="tags" id="hpSkills"></div>
+    </div>
+    <div class="block">
+      <strong>您已覆盖的技能</strong>
+      <div class="tags" id="hpMet"></div>
+    </div>
+    <div class="block">
+      <strong>待补足技能</strong>
+      <div class="tags" id="hpGap"></div>
+    </div>
+    <div class="block">
+      <strong>能力对比雷达图（蓝：您 / 绿：岗位期望）</strong>
+      <div class="radar-wrap"><canvas id="hpRadar"></canvas></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <h4>大学生职业规划网</h4>
+        <p>垂直晋升与换岗路径仅供参考，请结合目标公司 JD 调整。</p>
+      </div>
+    </div>
+    <div class="copyright">made by CyberSpark</div>
+  </footer>
+
+  <script src="/frontend/main.js"></script>
+  <script>
+    let lastPayload = null;
+    let netV = null;
+    let netL = null;
+    let hoverRadarChart = null;
+
+    function tagHtml(list, cls) {
+      if (!list || !list.length) return "<span style=color:#94a3b8;font-size:12px>无</span>";
+      return list.map((x) => `<span class="${cls}">${escapeHtml(String(x))}</span>`).join("");
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function hideHoverPanel() {
+      const el = document.getElementById("hoverPanel");
+      if (el) el.style.display = "none";
+      if (hoverRadarChart) {
+        hoverRadarChart.destroy();
+        hoverRadarChart = null;
+      }
+    }
+
+    function showNodeDetail(nodeId) {
+      const det = (lastPayload && lastPayload.node_details && lastPayload.node_details[nodeId]) || null;
+      const panel = document.getElementById("hoverPanel");
+      if (!det) {
+        panel.style.display = "block";
+        document.getElementById("hpName").textContent = "该节点暂无详情";
+        document.getElementById("hpMeta").textContent = "";
+        document.getElementById("hpDesc").textContent = "请稍后重试或重新分析。";
+        document.getElementById("hpBasic").innerHTML = "—";
+        document.getElementById("hpSkills").innerHTML = "";
+        document.getElementById("hpMet").innerHTML = "";
+        document.getElementById("hpGap").innerHTML = "";
+        if (hoverRadarChart) { hoverRadarChart.destroy(); hoverRadarChart = null; }
+        return;
+      }
+      panel.style.display = "block";
+      document.getElementById("hpName").textContent = det.job_name || "岗位";
+      const comp = det.company_name ? ` · ${det.company_name}` : "";
+      document.getElementById("hpMeta").textContent = (det.job_id || "") + comp;
+      document.getElementById("hpDesc").textContent = det.description || "暂无描述";
+      let basicHtml = [
+        det.education_hint && `学历：${det.education_hint}`,
+        det.internship_hint && `实习/经验：${det.internship_hint}`,
+        det.technical_depth_hint && `技术深度：${det.technical_depth_hint}`,
+      ]
+        .filter(Boolean)
+        .join("<br/>");
+      if (!basicHtml) basicHtml = "—";
+      if ((det.certificates || []).length)
+        basicHtml += `<br/>证书相关：${det.certificates.map((c) => escapeHtml(String(c))).join("、")}`;
+      document.getElementById("hpBasic").innerHTML = basicHtml;
+      document.getElementById("hpSkills").innerHTML = tagHtml(det.required_skills, "tag-skill");
+      document.getElementById("hpMet").innerHTML = tagHtml(det.user_satisfied_skills, "tag-ok");
+      document.getElementById("hpGap").innerHTML = tagHtml(det.user_gap_skills, "tag-gap");
+
+      const rc = det.radar;
+      const canvas = document.getElementById("hpRadar");
+      if (hoverRadarChart) hoverRadarChart.destroy();
+      if (rc && rc.labels && typeof Chart !== "undefined") {
+        hoverRadarChart = new Chart(canvas, {
+          type: "radar",
+          data: {
+            labels: rc.labels,
+            datasets: [
+              { label: "您", data: rc.student, borderColor: "rgba(59,130,246,1)", backgroundColor: "rgba(59,130,246,0.15)", borderWidth: 2 },
+              { label: "岗位期望", data: rc.job_required, borderColor: "rgba(34,197,94,1)", backgroundColor: "rgba(34,197,94,0.1)", borderWidth: 2 },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: { min: 0, max: 100, ticks: { stepSize: 25 } },
+            },
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+      }
+    }
+
+    function buildNetwork(containerId, part, emptyId, graphType) {
+      const el = document.getElementById(containerId);
+      const emptyEl = document.getElementById(emptyId);
+      if (!el || typeof vis === "undefined") return null;
+      const nodesRaw = (part && part.nodes) || [];
+      const edgesRaw = (part && part.edges) || [];
+      if (!nodesRaw.length) {
+        emptyEl.style.display = "block";
+        el.style.display = "none";
+        return null;
+      }
+      emptyEl.style.display = "none";
+      el.style.display = "block";
+      const isVertical = graphType === "vertical";
+      const nCount = nodesRaw.length;
+      const densityScale = nCount > 2500 ? 1.45 : nCount > 1200 ? 1.28 : nCount > 500 ? 1.12 : 1;
+
+      const nodes = new vis.DataSet(
+        nodesRaw.map((n) => {
+          const full = String(n.title || n.label || n.id || "");
+          const raw = String(n.label || n.title || n.id || "");
+          const shortLabel =
+            isVertical && raw.length > 14 ? raw.slice(0, 12) + "…" : raw.length > 22 ? raw.slice(0, 20) + "…" : raw;
+          const node = {
+            id: n.id,
+            label: shortLabel,
+            title: full,
+            shape: "box",
+            margin: isVertical ? 14 : 16,
+            font: { size: isVertical ? 11 : 12, face: "system-ui, sans-serif" },
+            color: { background: "#e0f2fe", border: "#0284c7", highlight: { background: "#bae6fd", border: "#0369a1" } },
+          };
+          if (isVertical) {
+            node.widthConstraint = { maximum: 168 };
+          }
+          return node;
+        })
+      );
+      const edges = new vis.DataSet(
+        edgesRaw.map((e) => {
+          const dashed = !!e.dashes;
+          /* 不在边上写「晋升/换岗」字，减少叠线糊字；用颜色与虚实区分 */
+          const base = {
+            from: e.from,
+            to: e.to,
+            arrows: e.arrows || "to",
+            label: "",
+            dashes: dashed,
+          };
+          if (dashed) {
+            return {
+              ...base,
+              color: { color: "#64748b", opacity: 0.92 },
+              width: 1.05,
+              smooth: false,
+            };
+          }
+          return {
+            ...base,
+            color: {
+              color: isVertical ? "rgba(29,78,216,0.92)" : "rgba(37,99,235,0.75)",
+              highlight: "#1d4ed8",
+            },
+            width: isVertical ? 1.15 : 1,
+            smooth: false,
+          };
+        })
+      );
+
+      let options;
+      if (isVertical) {
+        /* 层次布局在含环/多连通的大规模晋升子图上易塌成一条线，改用力导向 ForceAtlas2 + 大间距 */
+        const spring = Math.round(460 * densityScale);
+        options = {
+          layout: { improvedLayout: true },
+          physics: {
+            enabled: true,
+            solver: "forceAtlas2Based",
+            forceAtlas2Based: {
+              theta: 0.34,
+              gravitationalConstant: -42,
+              centralGravity: 0.0035,
+              springLength: spring,
+              springConstant: 0.012,
+              damping: 0.64,
+              avoidOverlap: 1,
+            },
+            maxVelocity: 48,
+            minVelocity: 0.65,
+            stabilization: {
+              enabled: true,
+              iterations: Math.min(2800, 520 + Math.floor(nCount * 0.45)),
+              updateInterval: 28,
+              fit: true,
+            },
+          },
+          edges: {
+            smooth: false,
+            arrows: { to: { enabled: true, scaleFactor: 0.62 } },
+          },
+          interaction: {
+            hover: true,
+            tooltipDelay: 90,
+            navigationButtons: true,
+            keyboard: { enabled: true },
+            zoomView: true,
+            dragView: true,
+          },
+        };
+      } else {
+        options = {
+          layout: { improvedLayout: true },
+          physics: {
+            enabled: true,
+            stabilization: { iterations: 260, updateInterval: 50 },
+            barnesHut: {
+              gravitationalConstant: -16000,
+              centralGravity: 0.065,
+              springLength: 275,
+              springConstant: 0.016,
+              damping: 0.58,
+              avoidOverlap: 0.82,
+            },
+          },
+          edges: { smooth: false, arrows: { to: { enabled: true, scaleFactor: 0.55 } } },
+          interaction: { hover: true, tooltipDelay: 80, zoomView: true, dragView: true },
+        };
+      }
+
+      const net = new vis.Network(el, { nodes, edges }, options);
+      let verticalStabilized = false;
+      const stopPhysicsAndFit = () => {
+        if (isVertical) verticalStabilized = true;
+        net.setOptions({ physics: { enabled: false } });
+        try {
+          net.fit({
+            animation: { duration: 420, easingFunction: "easeInOutQuad" },
+            padding: isVertical ? 88 : 40,
+          });
+        } catch (err) {
+          console.warn(err);
+        }
+      };
+      net.on("stabilizationIterationsDone", stopPhysicsAndFit);
+      if (isVertical) {
+        setTimeout(() => {
+          if (!verticalStabilized) stopPhysicsAndFit();
+        }, 12000);
+      }
+      net.on("hoverNode", (p) => showNodeDetail(p.node));
+      net.on("blurNode", () => hideHoverPanel());
+      return net;
+    }
+
+    async function loadGraph() {
+      const errEl = document.getElementById("loadError");
+      const intro = document.getElementById("vgIntro");
+      errEl.style.display = "none";
+      let anchors = [];
+      let student = {};
+      try {
+        const raw = localStorage.getItem("careerPlanLastResult");
+        if (raw) {
+          const data = JSON.parse(raw);
+          student = data.student_profile || {};
+          const matches = data.match_results || [];
+          anchors = matches.map((m) => m.job_id).filter(Boolean);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+
+      try {
+        const resp = await fetch("/api/career-graph-visual", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            student_profile: student,
+            anchor_job_ids: anchors,
+            computer_only: true,
+          }),
+        });
+        const text = await resp.text();
+        if (!resp.ok) throw new Error(text || resp.status);
+        lastPayload = JSON.parse(text);
+      } catch (e) {
+        errEl.textContent = "加载失败：" + (e && e.message ? e.message : String(e));
+        errEl.style.display = "block";
+        intro.textContent = "无法获取图谱数据。请确认已启动 API 服务并完成至少一次职业规划分析。";
+        return;
+      }
+
+      intro.innerHTML =
+        "计算机 / IT 子图 · 锚点 <strong>" +
+        (lastPayload.anchors_resolved || []).length +
+        "</strong> 个 · 垂直/换岗均合并同名岗位 · 力导向稳定后可缩放拖动 · 悬停看详情（Esc 关闭浮层）";
+
+      if (netV) netV.destroy();
+      if (netL) netL.destroy();
+      netV = buildNetwork("netVertical", lastPayload.vertical, "emptyVertical", "vertical");
+      netL = buildNetwork("netLateral", lastPayload.lateral, "emptyLateral", "lateral");
+    }
+
+    window.addEventListener("load", loadGraph);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") hideHoverPanel();
+    });
+  </script>
+</body>
+
+</html>

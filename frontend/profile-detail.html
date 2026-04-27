@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>画像分析 - 大学生职业规划网</title>
+  <link rel="stylesheet" href="/frontend/styles.css" />
+  <style>
+    .profile-page {
+      background: #0a1f5c url("/assets/background3.png") center top / cover no-repeat;
+    }
+
+    .profile-section {
+      margin-top: 24px;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    .profile-card {
+      background: url("/assets/card.png") center / cover no-repeat;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .job-scroll-container {
+      max-height: 500px;
+      overflow-y: auto;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .job-scroll-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .job-item {
+      padding: 20px;
+      border-radius: 12px;
+      background: rgba(248, 250, 252, 1);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .job-item:hover {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+    }
+
+    .job-item.selected {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .job-content {
+      flex: 1;
+    }
+
+    .job-name {
+      font-weight: 600;
+      font-size: 18px;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .job-description {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .job-score {
+      font-weight: 700;
+      font-size: 18px;
+      color: #f97316;
+      background: rgba(249, 115, 22, 0.1);
+      padding: 6px 16px;
+      border-radius: 20px;
+      align-self: center;
+    }
+
+    .job-scroll-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .job-scroll-container::-webkit-scrollbar-track {
+      background: rgba(148, 163, 184, 0.1);
+      border-radius: 4px;
+    }
+
+    .job-scroll-container::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 4px;
+    }
+
+    .job-scroll-container::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.5);
+    }
+
+    .profile-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+    }
+
+    .profile-image {
+      height: 180px;
+      background: rgba(102, 126, 234, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .profile-image img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-placeholder {
+      color: #fff;
+      font-size: 48px;
+      opacity: 0.6;
+    }
+
+    .profile-content {
+      padding: 20px;
+    }
+
+    .profile-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: white;
+      margin: 0 0 8px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .profile-subtitle {
+      font-size: 14px;
+      color: white;
+      margin: 0 0 12px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .profile-description {
+      font-size: 14px;
+      line-height: 1.6;
+      color: white;
+      margin: 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .section-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 24px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0b1f58;
+      margin: 0;
+    }
+
+    .section-subtitle {
+      font-size: 14px;
+      color: #64748b;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body class="profile-page">
+  <!-- Start Header Area -->
+  <div class="header-area" id="sticky-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3">
+          <div class="header-logo">
+            <a href="/" title="大学生职业规划网">
+              <span class="header-logo-text">CyberSpark大学生职业生涯规划</span>
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-9">
+          <button type="button" class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>
+          <div class="header-menu-wrap" id="headerMenuWrap">
+            <div class="header-menu">
+              <ul>
+                <li><a href="/" title="网站首页">网站首页</a></li>
+                <li class="menu-item-has-children">
+                  <a href="#" title="认识自我">认识自我<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="https://www.arealme.com/holland-code-career-test/cn/" rel="noopener noreferrer"
+                        target="_blank" title="霍兰德职业倾向测试">霍兰德职业倾向测试</a></li>
+                    <li><a href="https://www.16personalities.com/ch" rel="noopener noreferrer" target="_blank"
+                        title="MBTI 参考">MBTI 参考（16Personalities）</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#" title="生涯规划">生涯规划<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/profile" data-transition="true" title="个人信息填写">个人信息填写</a></li>
+                    <li><a href="/resume" data-transition="true" title="个人简历上传">个人简历上传</a></li>
+                    <li><a href="/report" data-transition="true" title="生涯报告生成">生涯报告生成</a></li>
+                    <li><a href="/profile-detail" data-transition="true" title="画像分析">画像分析</a></li>
+                    <li><a href="/vertical-job-graph" data-transition="true" title="垂直岗位图谱">垂直岗位图谱</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#" title="资讯中心">资讯中心<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/info-recruit" data-transition="true" title="校招与实习日历">校招与实习日历</a></li>
+                    <li><a href="/info-industry" data-transition="true" title="行业与岗位瞭望">行业与岗位瞭望</a></li>
+                    <li><a href="/info-resources" data-transition="true" title="规划工具与资源">规划工具与资源</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#" title="成长赋能">成长赋能<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/growth-communication" data-transition="true" title="沟通与面试表达">沟通与面试表达</a>
+                    </li>
+                    <li><a href="/growth-resume-tips" data-transition="true" title="简历与作品集">简历与作品集</a>
+                    </li>
+                    <li><a href="/growth-wellbeing" data-transition="true" title="压力与情绪调节">压力与情绪调节</a></li>
+                    <li><a href="/growth-study" data-transition="true" title="学业与时间管理">学业与时间管理</a></li>
+                    <li><a href="/growth-family" data-transition="true" title="家庭沟通小贴士">家庭沟通小贴士</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            <a class="login-btn" href="#" title="会员登陆">会员登陆</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start Banner / Hero -->
+  <div class="hero-area style-one page-hero d-flex align-items-center">
+    <div class="hero-area-overlay"></div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="section-title left style-one">
+          <p class="section-subtitle">深入了解自己，探索职业方向</p>
+          <h1>画像分析</h1>
+          <p class="hero-desc">
+            通过科学的分析方法，为您呈现全面的个人画像和匹配的职业岗位推荐。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container inner-page">
+    <!-- 学生画像部分 -->
+    <section class="profile-section">
+      <div class="section-header">
+        <div class="section-icon">👤</div>
+        <div>
+          <h2 class="section-title">学生画像</h2>
+          <p class="section-subtitle">基于您的个人信息和测评结果生成的综合画像</p>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <!-- 学生信息分析 -->
+        <div class="profile-card" onclick="window.location.href='/student-profile-analysis'">
+          <div class="profile-image">
+            <span class="profile-placeholder">🔍</span>
+          </div>
+          <div class="profile-content">
+            <h3 class="profile-title">学生信息分析</h3>
+            <p class="profile-subtitle">查看完整的个人信息详细分析</p>
+            <p class="profile-description">
+              点击查看您在个人信息填写页面提交的所有内容的详细分析，包括个人基本信息、学业情况、职业规划等全方位评估。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 推荐岗位画像部分 -->
+    <section class="profile-section">
+      <div class="section-header">
+        <div class="section-icon">🎯</div>
+        <div>
+          <h2 class="section-title">推荐岗位画像</h2>
+          <p class="section-subtitle">基于您的个人画像推荐的匹配岗位</p>
+        </div>
+      </div>
+
+      <div class="job-scroll-container">
+        <div class="job-scroll-list" id="jobList"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <h4>大学生职业规划网</h4>
+        <p>专注于为大学生提供成长指引与赋能机会，唤醒职业意识，实现学业、职场和心理的全面成长。</p>
+      </div>
+      <div>
+        <h4>关于我们</h4>
+        <a href="#">网站简介</a>
+        <a href="#">文化理念</a>
+        <a href="#">服务项目</a>
+      </div>
+      <div>
+        <h4>会员中心</h4>
+        <a href="#">会员登陆</a>
+        <a href="#">积分查询</a>
+        <a href="#">服务协议</a>
+      </div>
+    </div>
+    <div class="copyright">made by CyberSpark</div>
+  </footer>
+
+  <script src="/frontend/main.js"></script>
+  <script>
+    function renderJobList() {
+      const jobList = document.getElementById("jobList");
+      jobList.innerHTML = "";
+
+      const raw = localStorage.getItem("careerPlanLastResult");
+      if (!raw) {
+        jobList.innerHTML = '<div style="padding: 30px; text-align: center; color: #64748b;">暂无匹配岗位数据，请先完成个人信息填写和分析。</div>';
+        return;
+      }
+
+      try {
+        const data = JSON.parse(raw);
+        const matches = data.match_results || [];
+
+        if (!matches.length) {
+          jobList.innerHTML = '<div style="padding: 30px; text-align: center; color: #64748b;">暂无匹配岗位。</div>';
+          return;
+        }
+
+        // 显示前10个岗位
+        matches.slice(0, 10).forEach((job, index) => {
+          const jobDiv = document.createElement("div");
+          jobDiv.className = "job-item";
+          jobDiv.dataset.jobIndex = index;
+
+          const raw = Number(job.overall_score ?? job.total_score ?? 0);
+          const score = Number.isFinite(raw) ? raw.toFixed(1) : "0.0";
+          const titleLine = job.job_display_name || job.job_name || "未命名岗位";
+
+          jobDiv.innerHTML = `
+            <div class="job-content">
+              <div class="job-name">${index + 1}. ${titleLine}</div>
+              <div class="job-description">${job.job_description || "暂无岗位描述"}</div>
+            </div>
+            <div class="job-score">${score} 分</div>
+          `;
+
+          jobDiv.addEventListener("click", () => {
+            // 移除其他选中项
+            document.querySelectorAll(".job-item").forEach(item => {
+              item.classList.remove("selected");
+            });
+            // 添加当前选中项
+            jobDiv.classList.add("selected");
+            // 保存选中的岗位数据
+            localStorage.setItem("selectedJobIndex", index);
+            localStorage.setItem("selectedJobData", JSON.stringify(job));
+            // 跳转到岗位画像页面
+            window.location.href = "/job-profile";
+          });
+
+          jobList.appendChild(jobDiv);
+        });
+
+      } catch (error) {
+        console.error("Error rendering job list:", error);
+        jobList.innerHTML = '<div style="padding: 30px; text-align: center; color: #64748b;">数据加载失败，请稍后重试。</div>';
+      }
+    }
+
+    // 页面加载时渲染岗位列表
+    window.addEventListener("load", renderJobList);
+  </script>
+</body>
+
+</html>

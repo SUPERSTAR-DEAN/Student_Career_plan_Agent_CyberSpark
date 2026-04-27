@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>生涯报告生成 - CyberSpark</title>
+  <link rel="stylesheet" href="/frontend/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.27.1/plotly.min.js"></script>
+</head>
+<body class="report-page">
+  <div class="header-area" id="sticky-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3">
+          <div class="header-logo">
+            <a href="/new-home" title="大学生职业规划网"><span class="header-logo-text">CyberSpark大学生职业生涯规划</span></a>
+          </div>
+        </div>
+        <div class="col-lg-9">
+          <button type="button" class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>
+          <div class="header-menu-wrap" id="headerMenuWrap">
+            <div class="header-menu">
+              <ul>
+                <li><a href="/new-home">网站首页</a></li>
+                <li class="menu-item-has-children">
+                  <a href="#">认识自我<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="https://www.arealme.com/holland-code-career-test/cn/" rel="noopener noreferrer" target="_blank">霍兰德职业倾向测试</a></li>
+                    <li><a href="https://www.16personalities.com/ch" rel="noopener noreferrer" target="_blank">MBTI 参考（16Personalities）</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#">生涯规划<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/frontend/profile.html" data-transition="true">个人信息填写</a></li>
+                    <li><a href="/frontend/resume.html" data-transition="true">个人简历上传</a></li>
+                    <li><a href="/frontend/report.html" data-transition="true">生涯报告生成</a></li>
+                    <li><a href="/profile-detail" data-transition="true">画像分析</a></li>
+                    <li><a href="/vertical-job-graph" data-transition="true">垂直岗位图谱</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#">资讯中心<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/frontend/info-recruit.html" data-transition="true">校招与实习日历</a></li>
+                    <li><a href="/frontend/info-industry.html" data-transition="true">行业与岗位瞭望</a></li>
+                    <li><a href="/frontend/info-resources.html" data-transition="true">规划工具与资源</a></li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="#">成长赋能<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/frontend/growth-communication.html" data-transition="true">沟通与面试表达</a></li>
+                    <li><a href="/frontend/growth-resume-tips.html" data-transition="true">简历与作品集</a></li>
+                    <li><a href="/frontend/growth-wellbeing.html" data-transition="true">压力与情绪调节</a></li>
+                    <li><a href="/frontend/growth-study.html" data-transition="true">学业与时间管理</a></li>
+                    <li><a href="/frontend/growth-family.html" data-transition="true">家庭沟通小贴士</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            <a class="login-btn" href="#">会员登陆</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero-area style-one d-flex align-items-center page-hero">
+    <div class="hero-area-overlay" aria-hidden="true"></div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="section-title left style-one">
+          <p class="section-subtitle">生涯规划流程 / 第三步</p>
+          <h1>生涯报告生成</h1>
+          <p class="hero-desc">展示最近一次分析：能力画像、Top 岗位与适配度、六维匹配雷达图、晋升与换岗路径、差距与行动计划，并支持 Word / PDF 导出。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="inner-page" style="padding-top: 0;">
+    <div class="container">
+      <div class="status-strip">
+        <div class="progress-line"><span id="reportProgressBar"></span></div>
+        <div class="progress-text" id="reportProgressText">分析进度 0%</div>
+      </div>
+      <section class="panel">
+        <h2>生涯报告</h2>
+        <p class="muted-intro" style="margin:0 0 12px;color:#475569;font-size:14px;">数据来自本地缓存的最近一次「个人信息填写」或「简历上传」结果。</p>
+        <div class="report-toolbar">
+          <button class="btn btn-primary" type="button" id="reloadResultBtn">刷新读取最新结果</button>
+          <span class="report-toolbar-divider" aria-hidden="true"></span>
+          <span class="report-toolbar-caption">导出报告</span>
+          <button type="button" class="btn-export-word" id="exportWordBtn">导出 Word</button>
+          <button type="button" class="btn-export-pdf" id="exportPdfBtn">导出 PDF</button>
+        </div>
+
+        <div id="reportEmpty" class="result-box">暂无结果，请先去「个人信息填写」或「个人简历上传」完成分析。</div>
+
+        <div id="reportContent" style="display:none">
+          <div class="report-section">
+            <h3>一、学生能力画像</h3>
+            <div class="report-metrics">
+              <div class="report-metric">
+                <div class="label">档案完整度</div>
+                <div class="value" id="metricCompleteness">—</div>
+              </div>
+              <div class="report-metric">
+                <div class="label">竞争力评分</div>
+                <div class="value" id="metricCompetitive">—</div>
+              </div>
+            </div>
+            <p id="reportMbtiLine" class="report-mbti-note" style="display:none;margin:12px 0 0;padding:12px 14px;background:#f0f4ff;border-radius:8px;border:1px solid #dbe3ff;color:#334155;font-size:14px;line-height:1.6;"></p>
+          </div>
+
+          <div class="report-section">
+            <h3>二、人岗匹配推荐与适配度</h3>
+            <ul class="match-list" id="matchList"></ul>
+            <p style="margin:12px 0 6px;font-size:14px;color:#475569;font-weight:700;">Top1 岗位 · 六维匹配雷达图</p>
+            <div id="radarChart"></div>
+          </div>
+
+          <div class="report-section">
+            <h3>三、职业路径规划</h3>
+            <p><strong>短期目标：</strong><span id="pathShort"></span></p>
+            <p><strong>中期路径：</strong></p>
+            <ul class="path-list" id="pathMid"></ul>
+            <p><strong>长期愿景：</strong><span id="pathLong"></span></p>
+            <p style="margin-top:14px;font-size:14px;color:#475569;font-weight:700;">垂直晋升示例路径</p>
+            <ul class="path-list" id="pathVertical"></ul>
+            <p style="margin-top:10px;font-size:14px;color:#475569;font-weight:700;">可考虑的横向换岗方向</p>
+            <ul class="path-list" id="pathLateral"></ul>
+          </div>
+
+          <div class="report-section">
+            <h3>四、能力差距分析（针对 Top1 岗位）</h3>
+            <div id="gapBlock"></div>
+          </div>
+
+          <div class="report-section">
+            <h3>五、行动计划</h3>
+            <div class="report-panel-text" id="planNarrative" style="margin:0 0 12px;"></div>
+            <p style="font-weight:700;color:#1e3a5f;">短期计划</p>
+            <ul class="plan-list" id="planShort"></ul>
+            <p style="font-weight:700;color:#1e3a5f;margin-top:12px;">中期计划</p>
+            <ul class="plan-list" id="planMid"></ul>
+            <p style="font-weight:700;color:#1e3a5f;margin-top:12px;">长期计划</p>
+            <ul class="plan-list" id="planLong"></ul>
+            <p id="planCycle" style="margin-top:12px;color:#475569;"></p>
+          </div>
+
+          <div class="report-section">
+            <h3>六、报告摘要</h3>
+            <p class="exec-overall-line" id="execOverallLine" style="margin:0 0 12px;font-size:15px;color:#1e3a5f;font-weight:600;"></p>
+            <p style="margin:0 0 8px;font-size:14px;color:#475569;font-weight:600;">各维度得分</p>
+            <div id="execSummaryBar" style="min-height:280px;width:100%;"></div>
+            <div class="report-panel-text" id="execSummary" style="margin-top:16px;"></div>
+          </div>
+
+          <div class="report-section">
+            <h3>附录 · 报告正文节选</h3>
+            <div class="report-panel-text" id="fullTextExcerpt"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/frontend/main.js"></script>
+  <script>
+    const DIM_KEYS = [
+      "basic_requirements",
+      "professional_skills",
+      "communication_teamwork",
+      "stress_problem_solving",
+      "learning_ability",
+      "innovation_ability",
+    ];
+    const DIM_LABELS = ["基础要求", "职业技能", "沟通协作", "抗压与问题解决", "学习能力", "创新能力"];
+
+    const reportEmpty = document.getElementById("reportEmpty");
+    const reportContent = document.getElementById("reportContent");
+    const reloadResultBtn = document.getElementById("reloadResultBtn");
+    const exportWordBtn = document.getElementById("exportWordBtn");
+    const exportPdfBtn = document.getElementById("exportPdfBtn");
+    const progress = window.createProgressController("#reportProgressBar", "#reportProgressText");
+
+    function overallScore(m) {
+      const v = Number(m?.overall_score ?? m?.total_score ?? NaN);
+      if (!Number.isFinite(v)) return "—";
+      return v.toFixed(3);
+    }
+
+    function renderSummaryBar(dimScores) {
+      const el = document.getElementById("execSummaryBar");
+      if (!el) return;
+      if (!window.Plotly) {
+        el.innerHTML = "<p style=\"color:#64748b\">柱状图需加载 Plotly，请检查网络。</p>";
+        return;
+      }
+      try {
+        const scores = DIM_KEYS.map((k) => {
+          const v = Number(dimScores?.[k]);
+          return Number.isFinite(v) ? v : 0;
+        });
+        const hasAny = scores.some((s) => s > 0);
+        if (!hasAny) {
+          Plotly.purge(el);
+          el.innerHTML = "<p style=\"color:#64748b\">暂无各维度得分数据。</p>";
+          return;
+        }
+        const trace = {
+          type: "bar",
+          x: DIM_LABELS,
+          y: scores,
+          marker: {
+            color: "rgba(147, 197, 253, 0.92)",
+            line: { color: "rgba(96, 165, 250, 0.55)", width: 1 },
+          },
+          text: scores.map((s) => `${s.toFixed(1)} 分`),
+          textposition: "outside",
+          textfont: { color: "#334155", size: 12 },
+          hovertemplate: "%{x}<br>得分：%{y:.1f}<extra></extra>",
+        };
+        const layout = {
+          bargap: 0.42,
+          yaxis: { range: [0, 108], title: { text: "得分" }, gridcolor: "rgba(0,0,0,0.06)" },
+          xaxis: { title: { text: "" }, tickangle: -18, automargin: true },
+          margin: { l: 52, r: 24, t: 16, b: 88 },
+          font: { family: "Microsoft YaHei, PingFang SC, sans-serif", size: 13 },
+          paper_bgcolor: "rgba(255,255,255,0)",
+          plot_bgcolor: "rgba(248,250,252,0.95)",
+        };
+        Plotly.react(el, [trace], layout, { displayModeBar: false, responsive: true });
+      } catch (e) {
+        el.innerHTML = "<p style=\"color:#64748b\">柱状图渲染失败。</p>";
+      }
+    }
+
+    /** 附录正文：去掉 Markdown # 标题、统一列表符号，并剔除旧版「各维度得分」字典串 */
+    function normalizeFullTextExcerpt(raw) {
+      if (raw == null || String(raw).trim() === "") return "（暂无正文节选）";
+      let t = String(raw);
+      t = t.replace(/各维度得分：\{[^}]*\}。?\s*/g, "");
+      t = t.replace(/^#{1,6}\s+/gm, "");
+      t = t.replace(/^\s*-\s+/gm, "  · ");
+      return t.trim();
+    }
+
+    /** 拆分摘要：首句综合分单独展示，其余为文字说明（兼容旧缓存中含「各维度得分：{...}」） */
+    function parseExecutiveSummary(text, fallbackOverall) {
+      const t = (text || "").trim();
+      let overallLine = "";
+      let rest = t;
+      const mOverall = t.match(/^(综合人岗匹配度：[\d.]+分。)\s*/);
+      if (mOverall) {
+        overallLine = mOverall[1];
+        rest = t.slice(mOverall[0].length).trim();
+      } else if (fallbackOverall != null && !Number.isNaN(Number(fallbackOverall))) {
+        overallLine = `综合人岗匹配度：${Number(fallbackOverall).toFixed(1)}分。`;
+      }
+      rest = rest.replace(/各维度得分：\{[^}]*\}。?\s*/g, "");
+      rest = rest.replace(/各维度得分：[\s\S]*?。\s*/g, "");
+      return { overallLine, rest: rest.trim() };
+    }
+
+    function renderRadar(dimScores) {
+      const el = document.getElementById("radarChart");
+      if (!window.Plotly || !el) return;
+      try {
+        const scores = DIM_KEYS.map((k) => Number(dimScores?.[k] ?? 0));
+        const r = scores.concat(scores[0]);
+        const theta = DIM_LABELS.concat(DIM_LABELS[0]);
+        const trace = {
+          type: "scatterpolar",
+          r,
+          theta,
+          fill: "toself",
+          line: { color: "#ff7a45" },
+          fillcolor: "rgba(255, 122, 69, 0.35)",
+        };
+        const layout = {
+          polar: {
+            radialaxis: { visible: true, range: [0, 100], gridcolor: "rgba(0,0,0,0.08)" },
+            bgcolor: "rgba(255,255,255,0)",
+          },
+          paper_bgcolor: "rgba(0,0,0,0)",
+          showlegend: false,
+          margin: { l: 56, r: 56, t: 32, b: 32 },
+          font: { family: "Microsoft YaHei, PingFang SC, sans-serif", size: 13 },
+        };
+        Plotly.react(el, [trace], layout, { displayModeBar: false, responsive: true });
+      } catch (e) {
+        el.innerHTML = "<p style=\"color:#64748b\">雷达图加载失败，请检查网络能否访问 Plotly CDN。</p>";
+      }
+    }
+
+    function clearList(id) {
+      const n = document.getElementById(id);
+      if (n) n.innerHTML = "";
+    }
+
+    function setGap(gap) {
+      const host = document.getElementById("gapBlock");
+      if (!host) return;
+      host.innerHTML = "";
+      if (!gap || typeof gap !== "object") {
+        host.innerHTML = "<p>暂无差距分析数据。</p>";
+        return;
+      }
+      const miss = gap.missing_skills || [];
+      const certs = gap.missing_certificates || [];
+      const improve = gap.to_improve && typeof gap.to_improve === "object" ? gap.to_improve : {};
+      const adv = gap.advantage_skills || [];
+      const core = gap.core_strengths || [];
+      const softHints = gap.soft_dimension_hints || [];
+
+      function block(title, items, isObj, options) {
+        const opt = options || {};
+        const optional = opt.optional === true;
+        if (isObj) {
+          if (!Object.keys(items).length) {
+            if (optional) return;
+          }
+        } else if (!items.length) {
+          if (optional) return;
+        }
+        const d = document.createElement("div");
+        d.className = "gap-block";
+        const h = document.createElement("h4");
+        h.textContent = title;
+        d.appendChild(h);
+        if (isObj) {
+          const keys = Object.keys(items);
+          if (!keys.length) {
+            d.appendChild(document.createTextNode(opt.emptyHint || "（当前无该项）"));
+          } else {
+            const ul = document.createElement("ul");
+            ul.className = "path-list";
+            keys.forEach((k) => {
+              const li = document.createElement("li");
+              li.textContent = `${k}（当前约 ${items[k]} / 5）`;
+              ul.appendChild(li);
+            });
+            d.appendChild(ul);
+          }
+        } else {
+          if (!items.length) {
+            d.appendChild(document.createTextNode(opt.emptyHint || "（当前无该项）"));
+          } else {
+            const ul = document.createElement("ul");
+            ul.className = "path-list";
+            items.forEach((x) => {
+              const li = document.createElement("li");
+              li.textContent = String(x);
+              ul.appendChild(li);
+            });
+            d.appendChild(ul);
+          }
+        }
+        host.appendChild(d);
+      }
+
+      block(
+        "待补足技能",
+        miss,
+        false,
+        {
+          emptyHint:
+            "关键词层面暂无显性缺口（或岗位技能词较少）。可关注经历描述与岗位 JD 中隐含的软技能、工具链要求。",
+        }
+      );
+      block("建议强化（等级偏低）", improve, true, { optional: true });
+      block("尚未匹配的证书要求", certs, false, { optional: true });
+      block("相对优势技能", adv, false, { optional: true });
+      block("可写入经历的强项", core, false, { optional: true });
+      block("素养与经历提示", softHints, false, { optional: true });
+    }
+
+    function render() {
+      progress.start();
+      const raw = localStorage.getItem("careerPlanLastResult");
+      if (!raw) {
+        progress.fail();
+        reportEmpty.style.display = "block";
+        reportContent.style.display = "none";
+        reportEmpty.textContent = "暂无结果，请先去「个人信息填写」或「个人简历上传」。";
+        return;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        progress.fail();
+        reportEmpty.style.display = "block";
+        reportContent.style.display = "none";
+        reportEmpty.textContent = `读取失败：${e.message || e}`;
+        window.showErrorModal(`读取报告失败：${e.message || e}`);
+        return;
+      }
+
+      const profile = data.student_profile || {};
+      const matches = data.match_results || [];
+      const rd = data.report_data || {};
+      const cp = data.career_path || {};
+      const plan = data.action_plan || {};
+
+      reportEmpty.style.display = "none";
+      reportContent.style.display = "block";
+
+      const comp = rd.completeness_score ?? profile.completeness_score ?? 0;
+      const comp2 = rd.competitiveness_score ?? profile.competitiveness_score ?? 0;
+      document.getElementById("metricCompleteness").textContent =
+        typeof comp === "number" ? comp.toFixed(1) : String(comp);
+      document.getElementById("metricCompetitive").textContent =
+        typeof comp2 === "number" ? comp2.toFixed(1) : String(comp2);
+
+      const mbtiLine = document.getElementById("reportMbtiLine");
+      if (mbtiLine) {
+        const mt = (profile.mbti_type || "").trim();
+        const mzh = (profile.mbti_label_zh || "").trim();
+        if (mt) {
+          mbtiLine.style.display = "block";
+          mbtiLine.textContent =
+            `MBTI：${mzh || mt}。沟通、协作、抗压、问题解决、创新、学习六项已由「自评」与「类型典型分」融合；自评与类型倾向冲突较大时，以 MBTI 为优先参考。技术深度仍以自评/简历为准。`;
+        } else {
+          mbtiLine.style.display = "none";
+          mbtiLine.textContent = "";
+        }
+      }
+
+      const list = document.getElementById("matchList");
+      list.innerHTML = "";
+        if (!matches.length) {
+        const li = document.createElement("li");
+        li.textContent = "暂无匹配岗位。";
+        list.appendChild(li);
+        if (window.Plotly) {
+          Plotly.purge(document.getElementById("radarChart"));
+          const barEl = document.getElementById("execSummaryBar");
+          if (barEl) Plotly.purge(barEl);
+        }
+      } else {
+        matches.forEach((m, i) => {
+          const li = document.createElement("li");
+          const left = document.createElement("div");
+          left.className = "match-main";
+          const title = document.createElement("strong");
+          title.textContent = `${i + 1}. ${m.job_display_name || m.job_name || "（未命名岗位）"}`;
+          left.appendChild(title);
+          const comp = (m.company_name || "").trim();
+          if (comp && !m.job_display_name) {
+            const sub = document.createElement("span");
+            sub.className = "match-company";
+            sub.textContent = comp;
+            left.appendChild(sub);
+          }
+          const meta = m.matched_skill_count != null && m.required_skill_count != null;
+          if (meta) {
+            const sk = document.createElement("span");
+            sk.className = "match-skill-meta";
+            sk.textContent = `技能命中 ${m.matched_skill_count}/${m.required_skill_count}`;
+            left.appendChild(sk);
+          }
+          const right = document.createElement("div");
+          right.className = "match-score-col";
+          const sc = document.createElement("span");
+          sc.className = "score";
+          sc.textContent = `${overallScore(m)} 分`;
+          const barTrack = document.createElement("div");
+          barTrack.className = "match-bar-track";
+          const barFill = document.createElement("div");
+          barFill.className = "match-bar-fill";
+          const pct = Math.min(100, Math.max(0, Number(m.overall_score) || 0));
+          barFill.style.width = `${pct}%`;
+          barTrack.appendChild(barFill);
+          right.appendChild(sc);
+          right.appendChild(barTrack);
+          li.appendChild(left);
+          li.appendChild(right);
+          list.appendChild(li);
+        });
+        renderRadar(matches[0].dimension_scores || {});
+      }
+
+      document.getElementById("pathShort").textContent = cp.short_term || "—";
+      const midUl = document.getElementById("pathMid");
+      midUl.innerHTML = "";
+      const mids = cp.mid_term_paths || [];
+      if (!mids.length) {
+        const li = document.createElement("li");
+        li.textContent = "（暂无）";
+        midUl.appendChild(li);
+      } else {
+        mids.forEach((line) => {
+          const li = document.createElement("li");
+          li.textContent = typeof line === "string" ? line : JSON.stringify(line);
+          midUl.appendChild(li);
+        });
+      }
+      document.getElementById("pathLong").textContent = cp.long_term_vision || "—";
+
+      const vUl = document.getElementById("pathVertical");
+      vUl.innerHTML = "";
+      const verts = cp.vertical_display || [];
+      if (!verts.length) {
+        const li = document.createElement("li");
+        li.textContent = "（当前岗位暂无明显的垂直晋升路径数据）";
+        vUl.appendChild(li);
+      } else {
+        verts.forEach((path) => {
+          const li = document.createElement("li");
+          li.textContent = Array.isArray(path) ? path.join(" → ") : String(path);
+          vUl.appendChild(li);
+        });
+      }
+
+      const latUl = document.getElementById("pathLateral");
+      latUl.innerHTML = "";
+      const lats = cp.lateral_display || [];
+      if (!lats.length) {
+        const li = document.createElement("li");
+        li.textContent = "（当前岗位暂无换岗路径数据）";
+        latUl.appendChild(li);
+      } else {
+        lats.forEach((s) => {
+          const li = document.createElement("li");
+          li.textContent = String(s);
+          latUl.appendChild(li);
+        });
+      }
+
+      setGap(matches[0]?.gap_analysis);
+
+      function fillPlan(ulId, items) {
+        const ul = document.getElementById(ulId);
+        ul.innerHTML = "";
+        const arr = items || [];
+        if (!arr.length) {
+          const li = document.createElement("li");
+          li.textContent = "（暂无）";
+          ul.appendChild(li);
+          return;
+        }
+        arr.forEach((t) => {
+          const li = document.createElement("li");
+          const task = t.task || "";
+          const dl = t.deadline || "";
+          const head = document.createElement("div");
+          head.textContent = dl ? `${task}（${dl}）` : task;
+          li.appendChild(head);
+          const resources = Array.isArray(t.resources) ? t.resources : [];
+          if (resources.length) {
+            const rWrap = document.createElement("div");
+            rWrap.style.marginTop = "6px";
+            rWrap.style.display = "flex";
+            rWrap.style.flexDirection = "column";
+            rWrap.style.gap = "4px";
+            resources.slice(0, 4).forEach((r) => {
+              const a = document.createElement("a");
+              if (typeof r === "object" && r) {
+                a.textContent = `资源：${r.name || "学习链接"}${r.reason ? `（${r.reason}）` : ""}`;
+                a.href = r.url || "#";
+              } else {
+                a.textContent = `资源：${String(r)}`;
+                a.href = "#";
+              }
+              a.target = "_blank";
+              a.rel = "noopener noreferrer";
+              a.style.fontSize = "13px";
+              a.style.color = "#1d4ed8";
+              rWrap.appendChild(a);
+            });
+            li.appendChild(rWrap);
+          }
+          ul.appendChild(li);
+        });
+      }
+      fillPlan("planShort", plan.short_term);
+      fillPlan("planMid", plan.mid_term);
+      fillPlan("planLong", plan.long_term);
+      const pn = plan.narrative || {};
+      const narrativeEl = document.getElementById("planNarrative");
+      if (narrativeEl) {
+        const s = pn.short_term_paragraph || "";
+        const m = pn.mid_term_paragraph || "";
+        const l = pn.long_term_paragraph || "";
+        narrativeEl.textContent = [s, m, l].filter(Boolean).join("\n\n") || "（暂无分阶段策略说明）";
+      }
+      document.getElementById("planCycle").textContent =
+        plan.evaluation_cycle
+          ? `评估周期：${plan.evaluation_cycle}${Array.isArray(plan.evaluation_metrics) ? `；评估指标：${plan.evaluation_metrics.join("、")}` : ""}`
+          : "";
+
+      const top = matches[0];
+      const dimForBar = top?.dimension_scores || {};
+      const overallNum = top != null ? Number(top.overall_score ?? top.total_score ?? NaN) : NaN;
+      const parsed = parseExecutiveSummary(rd.executive_summary, overallNum);
+      const overallEl = document.getElementById("execOverallLine");
+      if (overallEl) {
+        overallEl.textContent =
+          parsed.overallLine ||
+          (!Number.isNaN(overallNum) ? `综合人岗匹配度：${overallNum.toFixed(1)}分。` : "");
+      }
+      renderSummaryBar(dimForBar);
+      const execRest = parsed.rest || "（暂无更多文字说明）";
+      document.getElementById("execSummary").textContent = execRest;
+      document.getElementById("fullTextExcerpt").textContent = normalizeFullTextExcerpt(
+        rd.full_text
+      );
+
+      progress.finish();
+    }
+
+    async function exportReport(kind) {
+      const raw = localStorage.getItem("careerPlanLastResult");
+      if (!raw) {
+        window.showErrorModal("请先生成规划结果再导出。");
+        return;
+      }
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        window.showErrorModal("本地缓存损坏，请重新分析。");
+        return;
+      }
+      const rep = data.report_for_export;
+      if (!rep || !rep.title) {
+        window.showErrorModal("缺少可导出报告结构，请重新运行「生成规划」。");
+        return;
+      }
+      const url = kind === "pdf" ? "/api/export-pdf" : "/api/export-word";
+      const filename = kind === "pdf" ? "career_report.pdf" : "career_report.docx";
+      try {
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ report_for_export: rep }),
+        });
+        if (!resp.ok) {
+          const t = await resp.text();
+          let msg = `HTTP ${resp.status}`;
+          try {
+            const j = JSON.parse(t);
+            if (j.detail) msg = j.detail;
+          } catch {
+            if (t) msg = t.slice(0, 200);
+          }
+          throw new Error(msg);
+        }
+        const blob = await resp.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      } catch (e) {
+        window.showErrorModal(`导出失败：${e.message || e}`);
+      }
+    }
+
+    reloadResultBtn?.addEventListener("click", render);
+    exportWordBtn?.addEventListener("click", () => exportReport("word"));
+    exportPdfBtn?.addEventListener("click", () => exportReport("pdf"));
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 实时咨询 - CyberSpark</title>
+  <link rel="stylesheet" href="/frontend/styles.css" />
+  <style>
+    .consult-wrap {
+      max-width: min(1040px, 100%);
+      margin: 0 auto;
+      padding: 0 1.25rem 3.5rem;
+    }
+    .consult-chat {
+      border: 1px solid rgba(0,0,0,.08);
+      border-radius: 14px;
+      background: #fafbfc;
+      min-height: min(52vh, 560px);
+      max-height: min(72vh, 680px);
+      overflow-y: auto;
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 10px 40px rgba(15, 23, 42, 0.06);
+    }
+    .consult-msg { margin-bottom: 1.1rem; display: flex; flex-direction: column; gap: .3rem; }
+    .consult-msg--user { align-items: flex-end; }
+    .consult-msg--assistant { align-items: flex-start; }
+    .consult-bubble {
+      max-width: min(92%, 820px);
+      padding: .75rem 1rem;
+      border-radius: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 1rem;
+    }
+    .consult-msg--user .consult-bubble {
+      background: linear-gradient(135deg, #3b5bdb 0%, #5c7cfa 100%);
+      color: #fff;
+    }
+    .consult-msg--assistant .consult-bubble {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,.06);
+      color: #222;
+    }
+    .consult-meta { font-size: .75rem; opacity: .65; padding: 0 .35rem; }
+    .consult-input-row { display: flex; gap: .6rem; align-items: flex-end; }
+    .consult-input-row textarea {
+      flex: 1;
+      min-height: 100px;
+      padding: .75rem .85rem;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,.12);
+      font: inherit;
+      font-size: 1rem;
+      resize: vertical;
+    }
+    .consult-hint { font-size: .875rem; color: #555; margin-bottom: 1.1rem; line-height: 1.55; max-width: 56rem; }
+    .consult-loading { opacity: .7; font-style: italic; }
+  </style>
+</head>
+<body class="report-page">
+  <div class="header-area" id="sticky-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-3">
+          <div class="header-logo">
+            <a href="/" title="大学生职业规划网"><span class="header-logo-text">CyberSpark大学生职业生涯规划</span></a>
+          </div>
+        </div>
+        <div class="col-lg-9">
+          <button type="button" class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>
+          <div class="header-menu-wrap" id="headerMenuWrap">
+            <div class="header-menu">
+              <ul>
+                <li><a href="/">网站首页</a></li>
+                <li class="menu-item-has-children">
+                  <a href="#">生涯规划<i class="fas fa-chevron-down"></i></a>
+                  <ul class="sub-menu">
+                    <li><a href="/profile" data-transition="true">个人信息填写</a></li>
+                    <li><a href="/resume" data-transition="true">个人简历上传</a></li>
+                    <li><a href="/report" data-transition="true">生涯报告生成</a></li>
+                    <li><a href="/profile-detail" data-transition="true">画像分析</a></li>
+                    <li><a href="/vertical-job-graph" data-transition="true">垂直岗位图谱</a></li>
+                    <li><a href="/consult" data-transition="true">AI 实时咨询</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            <a class="login-btn" href="#">会员登陆</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero-area style-one d-flex align-items-center page-hero">
+    <div class="hero-area-overlay" aria-hidden="true"></div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="section-title left style-one">
+          <p class="section-subtitle">智能对话</p>
+          <h1>AI 实时职业咨询</h1>
+          <p class="hero-desc">描述你的年级、专业、兴趣或困惑，顾问会给出可行建议；若信息不够，会主动追问关键细节。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="container main-after-hero">
+    <div class="consult-wrap">
+      <p class="consult-hint">提示：配置环境变量 <code>LLM_API_KEY</code> 后由云端大模型回复（耗时取决于模型与网络，通常数秒至数十秒）。未配置时为本地演示回复，可即时返回。若已配置但仍很慢，请检查网络或尝试更换 <code>LLM_MODEL_NAME</code>（如更快的小模型）。</p>
+      <div id="chatLog" class="consult-chat" aria-live="polite"></div>
+      <div class="consult-input-row">
+        <textarea id="chatInput" placeholder="例如：我是大二经济学，想转产品但不知道从何准备…" rows="3"></textarea>
+        <button type="button" class="btn btn-primary" id="sendBtn">发送</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="/frontend/main.js"></script>
+  <script src="/frontend/consult.js"></script>
+</body>
+</html>
